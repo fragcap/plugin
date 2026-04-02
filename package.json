@@ -1,0 +1,12 @@
+{
+  "name": "fragcap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@octokit/rest": "^21.0.0",
+    "undici": "^7.24.7"
+  }
+}
