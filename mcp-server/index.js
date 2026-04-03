@@ -554,9 +554,9 @@ async function tool_preview_pii({ id }) {
   const findings = [];
   const text = JSON.stringify(draft);
 
-  const pathRe = /(\/Users\/([^\/\s"]+)|\/home\/([^\/\s"]+)|C:\\Users\\([^\\"\s]+))/g;
+  const pathRe = /(\/Users\/([^\/\s"]+)|\/home\/([^\/\s"]+)|C:\\Users\\([^\\"\s]+)|\/mnt\/[a-z]\/Users\/([^\/\s"]+))/g;
   for (const m of text.matchAll(pathRe)) {
-    const username = m[2] || m[3] || m[4];
+    const username = m[2] || m[3] || m[4] || m[5];
     findings.push({
       type: 'file_path',
       original: m[0],

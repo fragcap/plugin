@@ -1,3 +1,9 @@
+---
+name: capsule-knowledge
+description: Proactive guidance for when and how to suggest FragCap capsule commands
+disable-model-invocation: true
+---
+
 # FragCap Capsule Knowledge
 
 The FragCap plugin is available in this session. Use this knowledge to proactively help the user leverage it.
