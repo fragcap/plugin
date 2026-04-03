@@ -10,6 +10,5 @@
   "repository": "https://github.com/fragcap/fragcap",
   "license": "MIT",
   "keywords": ["knowledge", "capsule", "gist", "sharing", "discovery"],
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
