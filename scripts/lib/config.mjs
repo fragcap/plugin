@@ -1,0 +1,59 @@
+// FragCap configuration — zero external dependencies
+import { readFile, writeFile, mkdir } from 'fs/promises';
+import { join, dirname } from 'path';
+
+// ─── Constants ─────────────────────────────────────────────────────────────────
+export const CLIENT_ID   = 'Iv23liqwgua8sg2xc1v3';
+export const WORKER_URL  = 'https://fragcap-worker.danuberiverferryman.workers.dev/register';
+export const PAGES_BASE  = 'https://fragcap.github.io/registry';
+
+// ─── Paths ─────────────────────────────────────────────────────────────────────
+export const DATA_DIR     = process.env.FRAGCAP_DATA || process.env.CLAUDE_PLUGIN_DATA;
+if (!DATA_DIR) {
+  console.error(JSON.stringify({ error: 'FRAGCAP_DATA / CLAUDE_PLUGIN_DATA not set.' }));
+  process.exit(1);
+}
+export const CAPSULES_DIR = join(DATA_DIR, 'capsules');
+export const AUTH_PATH    = join(DATA_DIR, 'auth.json');
+export const PUSHED_PATH  = join(DATA_DIR, 'pushed.json');
+export const CACHE_DIR    = join(DATA_DIR, 'cache');
+
+// ─── JSON helpers ──────────────────────────────────────────────────────────────
+export async function readJSON(filePath, fallback = null) {
+  try { return JSON.parse(await readFile(filePath, 'utf8')); }
+  catch { return fallback; }
+}
+
+export async function writeJSON(filePath, data) {
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFile(filePath, JSON.stringify(data, null, 2));
+}
+
+// ─── Output helper ─────────────────────────────────────────────────────────────
+export function output(obj) {
+  console.log(JSON.stringify(obj, null, 2));
+}
+
+// ─── Token management ──────────────────────────────────────────────────────────
+export async function ensureValidToken() {
+  const auth = await readJSON(AUTH_PATH);
+  if (!auth?.access_token) throw new Error('Not authenticated. Run /fragcap:auth first.');
+
+  if (new Date(auth.expires_at) > new Date(Date.now() + 5 * 60 * 1000)) {
+    return auth.access_token;
+  }
+
+  if (!auth.refresh_token) throw new Error('Session expired. Run /fragcap:auth to re-authenticate.');
+
+  const res = await fetch('https://github.com/login/oauth/access_token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: auth.refresh_token })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(`Session expired (${data.error}). Run /fragcap:auth to re-authenticate.`);
+
+  const updated = { ...auth, access_token: data.access_token, refresh_token: data.refresh_token, expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString() };
+  await writeJSON(AUTH_PATH, updated);
+  return updated.access_token;
+}

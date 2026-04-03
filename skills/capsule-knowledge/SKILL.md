@@ -1,6 +1,6 @@
 ---
 name: capsule-knowledge
-description: Proactive guidance for when and how to suggest FragCap capsule commands
+description: Proactive guidance for when and how to suggest FragCap capsule commands. Loaded automatically during exploration and debugging sessions.
 ---
 
 # FragCap Capsule Knowledge
@@ -9,7 +9,7 @@ The FragCap plugin is available in this session. Use this knowledge to proactive
 
 ## When to Suggest `/fragcap:review`
 
-- A SessionStart message mentions pending capsule drafts or a `pending_review_flag`
+- A SessionStart message mentions pending capsule drafts
 - The user just finished solving a non-trivial problem in the previous session
 - The user asks "what did I explore recently" or similar
 

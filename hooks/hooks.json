@@ -6,7 +6,7 @@
           {
             "type": "agent",
             "timeout": 60,
-            "prompt": "Evaluate this session. If it contains actionable knowledge (concrete attempts with outcomes, specific pitfalls, or working solutions), call the generate_capsule MCP tool to save a structured capsule draft. Use specific tags (library names, API names, error types — never generic tags like 'javascript' or 'bug'). Skip if the session was trivial (fewer than 4 meaningful exchanges or no tool use). Scrub all PII: replace file paths with generic equivalents, replace emails with [email], remove API keys/tokens/credentials, replace person names with roles."
+            "prompt": "Evaluate this session. If it contains actionable knowledge (concrete attempts with outcomes, specific pitfalls, or working solutions), save a structured capsule draft by running:\n\nnode \"${CLAUDE_PLUGIN_ROOT}/scripts/generate-capsule.mjs\" '<JSON>'\n\nwhere <JSON> is a single-line JSON string with these fields:\n- tags (array of strings): specific tags like library names, API names, error types — never generic tags like 'javascript' or 'bug'\n- problem (string): one sentence describing what was being solved\n- attempts (array of {tried, outcome}): what was attempted and what happened\n- pitfalls (array of strings): specific traps or gotchas\n- solution (string or null): what finally worked\n- snippet (string or null): optional directly-usable code\n- status: 'resolved', 'open', or 'abandoned'\n\nSkip if the session was trivial (fewer than 4 meaningful exchanges or no tool use).\n\nScrub all PII before saving: replace file paths with generic equivalents, replace emails with [email], remove API keys/tokens/credentials, replace person names with roles.\n\nThe FRAGCAP_DATA environment variable must be set to: ${CLAUDE_PLUGIN_DATA}"
           }
         ]
       }
@@ -16,15 +16,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1 || (cd \"${CLAUDE_PLUGIN_DATA}\" && cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" . && npm install) || rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\""
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "test -f \"${CLAUDE_PLUGIN_DATA}/pending_review_flag\" && COUNT=$(ls \"${CLAUDE_PLUGIN_DATA}/capsules/\"*.json 2>/dev/null | wc -l) && [ \"$COUNT\" -gt 0 ] && echo \"You have $COUNT pending capsule draft(s). Run /fragcap:review to review them.\" && rm -f \"${CLAUDE_PLUGIN_DATA}/pending_review_flag\" || true"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-pending.mjs\"",
+            "env": {
+              "FRAGCAP_DATA": "${CLAUDE_PLUGIN_DATA}"
+            }
           }
         ]
       }

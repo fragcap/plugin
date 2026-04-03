@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+// Usage: node search.mjs <query>
+import { PAGES_BASE, CACHE_DIR, readJSON, writeJSON, output } from './lib/config.mjs';
+import { mkdir } from 'fs/promises';
+import { join } from 'path';
+
+const MANIFEST_TTL = 60 * 60 * 1000;
+const SHARD_TTL = 24 * 60 * 60 * 1000;
+
+const query = process.argv.slice(2).join(' ');
+if (!query) { output({ results: [], message: 'No query provided.' }); process.exit(0); }
+
+// ─── Keyword extraction ───────────────────────────────────────────────────────
+const STOP_WORDS = new Set(['a','an','the','and','or','but','in','on','at','to','for','of','with','how','do','i','my','use','using','when','why','what','is','are','was','get','set','make','work','works','working','need','want','try','tried','can','cannot','cant','does','doesnt','problem','issue','error','bug','fix']);
+const keywords = query.toLowerCase().replace(/[^a-z0-9\s\-_.]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w)).slice(0, 6);
+if (keywords.length === 0) { output({ results: [], message: 'Query too generic.' }); process.exit(0); }
+
+// ─── Cached fetch ─────────────────────────────────────────────────────────────
+async function fetchCached(url, cacheFile, ttl) {
+  await mkdir(CACHE_DIR, { recursive: true });
+  const cachePath = join(CACHE_DIR, cacheFile);
+  const cached = await readJSON(cachePath);
+  if (cached && Date.now() - cached.ts < ttl) return cached.data;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    await writeJSON(cachePath, { ts: Date.now(), data });
+    return data;
+  } catch { return cached?.data || null; }
+}
+
+// ─── Load all shards ──────────────────────────────────────────────────────────
+const manifest = await fetchCached(`${PAGES_BASE}/manifest.json`, 'manifest.json', MANIFEST_TTL);
+if (!manifest?.shards?.length) { output({ results: [], message: 'Registry not reachable or empty.', keywords }); process.exit(0); }
+
+const capsules = [];
+await Promise.all(manifest.shards.map(async name => {
+  const shard = await fetchCached(`${PAGES_BASE}/shards/${name}`, `shard_${name}`, SHARD_TTL);
+  if (shard?.capsules) capsules.push(...shard.capsules);
+}));
+
+// ─── Score and rank ───────────────────────────────────────────────────────────
+function toBigrams(text) {
+  const words = text.toLowerCase().split(/\s+/);
+  return words.flatMap((w, i) => i < words.length - 1 ? [`${w} ${words[i + 1]}`] : []);
+}
+
+const queryBigrams = new Set(toBigrams(query));
+const results = capsules
+  .map(cap => {
+    let score = 0;
+    const haystack = [...(cap.tags || []), cap.problem || '', cap.summary || ''].join(' ').toLowerCase();
+    for (const kw of keywords) {
+      if (cap.tags?.some(t => t.toLowerCase() === kw)) score += 3;
+      else if (haystack.includes(kw)) score += 1;
+    }
+    score += toBigrams(haystack).filter(b => queryBigrams.has(b)).length * 2;
+    if (cap.status === 'resolved') score += 0.5;
+    return { ...cap, score };
+  })
+  .filter(r => r.score > 0)
+  .sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const order = { resolved: 0, open: 1, abandoned: 2 };
+    const diff = (order[a.status] ?? 1) - (order[b.status] ?? 1);
+    if (diff !== 0) return diff;
+    return new Date(b.updated_at) - new Date(a.updated_at);
+  });
+
+output({ results: results.slice(0, 5), total_found: results.length, keywords });
