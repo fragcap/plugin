@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Usage: node push.mjs <capsule-id> [anonymous|attributed]
 import { CAPSULES_DIR, PUSHED_PATH, AUTH_PATH, WORKER_URL, ensureValidToken, readJSON, writeJSON, output } from './lib/config.mjs';
-import { createGist } from './lib/github.mjs';
+import { createGist, deleteGist } from './lib/github.mjs';
 import { applyVisibility } from './lib/pii.mjs';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
@@ -32,16 +32,33 @@ try {
   await unlink(draftPath).catch(() => {});
 
   // Register with central registry (only for public gists)
+  // Must succeed — if it fails, roll back by deleting the public gist.
   let registry;
   if (isPublic) {
-    registry = 'registered';
+    let registrationFailed = false;
+    let registrationError = '';
     try {
       const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
       const rd = await r.json();
-      if (!rd.ok) registry = rd.error || 'sync failed';
-    } catch { registry = 'Worker unreachable — will sync later.'; }
+      if (!rd.ok) { registrationFailed = true; registrationError = rd.error || 'sync failed'; }
+      else registry = 'registered';
+    } catch { registrationFailed = true; registrationError = 'Worker unreachable'; }
+
+    if (registrationFailed) {
+      // Roll back: remove the public gist so it doesn't linger unregistered
+      await deleteGist(token, gist.id).catch(() => {});
+      // Also undo the pushed record since we're treating this as not pushed
+      delete pushed[id];
+      await writeJSON(PUSHED_PATH, pushed);
+      output({
+        error: `Registration failed: ${registrationError}. The public Gist has been rolled back.`,
+        suggest_secret: true,
+        message: 'You can upload as secret instead — the capsule will be saved to GitHub Gist but won\'t appear in the public index. You can still access it via its URL next time.',
+      });
+      process.exit(1);
+    }
   } else {
-    registry = 'skipped (private gist — not searchable by others)';
+    registry = 'skipped (secret gist — not searchable by others)';
   }
 
   output({ success: true, gist_id: gist.id, url: gist.html_url, public: isPublic, registry });

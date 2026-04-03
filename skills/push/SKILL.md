@@ -55,4 +55,12 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
 
 7. **Result**:
    - Success: show the Gist URL, public/secret status, and registry status.
-   - Failure: "Push failed: {error}. Your draft is still saved locally — try again later."
+   - General failure: "Push failed: {error}. Your draft is still saved locally — try again later."
+   - **Public registration failure** (response contains `suggest_secret: true`):
+     - The public Gist has already been rolled back (deleted) automatically.
+     - Show the `error` and `message` fields from the response.
+     - Present inline options:
+       ```
+       [1] Upload as secret instead  [2] Cancel — keep draft locally
+       ```
+     - If user picks [1]: re-run `push.mjs <draft-id> <visibility> secret`.
