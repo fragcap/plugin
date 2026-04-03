@@ -1,12 +1,19 @@
 // FragCap configuration — zero external dependencies
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
-import { ProxyAgent, setGlobalDispatcher } from 'undici';
-
-// ─── Proxy setup (respect system proxy env vars, no-op if unset) ───────────
+// ─── Proxy setup (dynamic import, only when proxy env var is set) ───────────
 const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY
   || process.env.http_proxy || process.env.HTTP_PROXY;
-if (proxyUrl) setGlobalDispatcher(new ProxyAgent(proxyUrl));
+if (proxyUrl) {
+  try {
+    const { ProxyAgent, setGlobalDispatcher } = await import('undici');
+    setGlobalDispatcher(new ProxyAgent(proxyUrl));
+  } catch {
+    console.error(JSON.stringify({
+      warning: 'Proxy configured but undici not available. Install undici or unset proxy vars.'
+    }));
+  }
+}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 export const CLIENT_ID   = 'Iv23liqwgua8sg2xc1v3';

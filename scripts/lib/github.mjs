@@ -12,7 +12,11 @@ export async function githubAPI(method, path, token, body = null) {
     },
     ...(body ? { body: JSON.stringify(body) } : {})
   });
-  const data = await res.json();
+  let data = null;
+  if (res.status !== 204) {
+    try { data = await res.json(); }
+    catch { data = { message: await res.text() }; }
+  }
   return { status: res.status, data };
 }
 

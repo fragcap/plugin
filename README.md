@@ -47,7 +47,7 @@ claude --plugin-dir ./path/to/fragcap
 /fragcap:auth
 ```
 
-Opens a browser-based GitHub Device Flow. FragCap only requests Gist read/write permission — no repo access. Your token stays on your machine.
+Opens a browser-based GitHub Device Flow. FragCap only requests Gist read/write permission — no repo access. Your token is stored locally and never sent to any third-party server.
 
 **2. Work normally**
 
@@ -123,6 +123,9 @@ Hit a wall? Search what others have learned:
 - OS usernames in file paths (`/Users/yourname/...`, `/home/yourname/...`, WSL paths)
 - Email addresses
 - Internal/corporate URLs
+- Private network IP addresses (10.x, 172.16–31.x, 192.168.x)
+- Internal hostnames (`.local`, `.internal`, `.corp`, `.lan`)
+- Common API key patterns (OpenAI, AWS, GitHub, Slack tokens)
 
 **Minimal permissions.** The GitHub OAuth app requests only Gist read/write scope — no access to your repositories, profile, or organizations.
 
@@ -177,7 +180,8 @@ FragCap consists of three components:
 
 | Component | Repository | Purpose |
 |-----------|-----------|---------|
-| **Plugin** (this repo) | [fragcap/fragcap](https://github.com/fragcap/fragcap) | Claude Code plugin — capture, review, push, search |
+| **Plugin** (this repo) | [fragcap/plugin](https://github.com/fragcap/plugin) | Claude Code plugin — capture, review, push, search |
+| **Marketplace** | [fragcap/marketplace](https://github.com/fragcap/marketplace) | Plugin catalog entry for the Claude Code marketplace |
 | **Worker** | [fragcap/fragcap-worker](https://github.com/fragcap/fragcap-worker) | Cloudflare Worker — registers Gist IDs in the central index |
 | **Registry** | [fragcap/registry](https://github.com/fragcap/registry) | GitHub Pages — serves the searchable capsule index |
 

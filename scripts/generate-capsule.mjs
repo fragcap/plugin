@@ -2,7 +2,7 @@
 // Usage: node generate-capsule.mjs '<json>'
 // Accepts capsule data as a JSON string argument
 import { CAPSULES_DIR, DATA_DIR, output } from './lib/config.mjs';
-import { createHash } from 'crypto';
+import { randomUUID } from 'crypto';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
@@ -15,8 +15,7 @@ try {
 
   const now = new Date().toISOString();
   const slug = (input.tags?.[0] || 'exploration') + '-' + now.slice(0, 7).replace('-', '');
-  const hash = createHash('md5').update(now + Math.random()).digest('hex').slice(0, 4);
-  const id = `${slug}-${hash}`;
+  const id = `${slug}-${randomUUID().slice(0, 8)}`;
 
   const capsule = {
     schema_version: 1, id,
