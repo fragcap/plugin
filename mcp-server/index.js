@@ -28,8 +28,10 @@ const WORKER_URL     = process.env.FRAGCAP_WORKER_URL
   : '';
 const PAGES_BASE     = process.env.FRAGCAP_PAGES_BASE || '';
 
-const DATA_DIR     = process.env.FRAGCAP_DATA
-  || join(process.env.HOME || process.env.USERPROFILE || '', '.fragcap');
+if (!process.env.FRAGCAP_DATA) {
+  throw new Error('FRAGCAP_DATA environment variable is not set. The MCP server must be launched by Claude Code with plugin env vars.');
+}
+const DATA_DIR     = process.env.FRAGCAP_DATA;
 
 const CAPSULES_DIR    = join(DATA_DIR, 'capsules');
 const AUTH_PATH       = join(DATA_DIR, 'auth.json');
