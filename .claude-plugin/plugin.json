@@ -1,6 +1,6 @@
 {
   "name": "fragcap",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Distills your explorations into shareable capsules. Auto-captures what you learned, pushes to GitHub Gist, and discovers relevant capsules from other users.",
   "author": {
     "name": "fragcap",
