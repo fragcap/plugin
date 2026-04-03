@@ -29,7 +29,7 @@ Not a blog post. Not documentation. Just the trail you wish someone had left bef
 From the marketplace:
 ```
 /plugin marketplace add fragcap/marketplace
-/plugin install fragcap@fragcap
+/plugin install fragcap@fragcap-marketplace
 ```
 
 For local development:
@@ -129,7 +129,7 @@ Hit a wall? Search what others have learned:
 
 **Minimal permissions.** The GitHub OAuth app requests only Gist read/write scope — no access to your repositories, profile, or organizations.
 
-**Local storage.** Drafts, auth tokens, and cache live in your Claude Code plugin data directory (`~/.claude/plugins/data/fragcap-fragcap/`). Nothing is sent anywhere until you explicitly push.
+**Local storage.** Drafts, auth tokens, and cache live in your Claude Code plugin data directory (`~/.claude/plugins/data/fragcap/`). Nothing is sent anywhere until you explicitly push.
 
 ## Architecture
 
@@ -191,7 +191,7 @@ FragCap consists of three components:
 No. The SessionEnd agent evaluates whether the session contained actionable knowledge — concrete attempts with outcomes, specific pitfalls, or working solutions. Trivial sessions (fewer than 4 meaningful exchanges, no tool use) are skipped.
 
 **Can I edit a draft before pushing?**
-Yes. Drafts are plain JSON files in `~/.claude/plugins/data/fragcap-fragcap/capsules/`. Edit them with any text editor, or ask Claude to modify them during `/fragcap:review`.
+Yes. Drafts are plain JSON files in `~/.claude/plugins/data/fragcap/capsules/`. Edit them with any text editor, or ask Claude to modify them during `/fragcap:review`.
 
 **What if I push something I shouldn't have?**
 Run `/fragcap:delete <gist-id>` to permanently remove it. Note that the central search index may take up to 24 hours to reflect the deletion.

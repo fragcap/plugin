@@ -264,7 +264,7 @@ if (!rawDataDir) {
 
 /**
  * Claude Code may resolve CLAUDE_PLUGIN_DATA as either "fragcap" (plugin name)
- * or "fragcap-fragcap" (org-name). Detect both and converge on whichever has data.
+ * or "fragcap-marketplace-fragcap" (marketplace-plugin). Detect both and converge.
  */
 function resolveDataDir(raw) {
   const resolved = resolve(raw);
@@ -272,8 +272,8 @@ function resolveDataDir(raw) {
   const base     = basename(resolved);
 
   const candidates = base === 'fragcap'
-    ? [resolved, join(parent, 'fragcap-fragcap')]
-    : base === 'fragcap-fragcap'
+    ? [resolved, join(parent, 'fragcap-marketplace-fragcap')]
+    : base === 'fragcap-marketplace-fragcap'
       ? [resolved, join(parent, 'fragcap')]
       : [resolved];
 
