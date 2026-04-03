@@ -1,5 +1,6 @@
 // FragCap configuration — zero external dependencies (improved)
 import { readFile, writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join, dirname, basename, resolve } from 'path';
 import { execSync } from 'child_process';
 import http from 'http';
@@ -260,7 +261,32 @@ if (!rawDataDir) {
     'FRAGCAP_DATA or CLAUDE_PLUGIN_DATA environment variable must be set.',
   );
 }
-export const DATA_DIR     = resolve(rawDataDir);
+
+/**
+ * Claude Code may resolve CLAUDE_PLUGIN_DATA as either "fragcap" (plugin name)
+ * or "fragcap-fragcap" (org-name). Detect both and converge on whichever has data.
+ */
+function resolveDataDir(raw) {
+  const resolved = resolve(raw);
+  const parent   = dirname(resolved);
+  const base     = basename(resolved);
+
+  const candidates = base === 'fragcap'
+    ? [resolved, join(parent, 'fragcap-fragcap')]
+    : base === 'fragcap-fragcap'
+      ? [resolved, join(parent, 'fragcap')]
+      : [resolved];
+
+  for (const dir of candidates) {
+    if (existsSync(join(dir, 'auth.json'))) return dir;
+  }
+  for (const dir of candidates) {
+    if (existsSync(dir)) return dir;
+  }
+  return resolved;
+}
+
+export const DATA_DIR     = resolveDataDir(rawDataDir);
 export const CAPSULES_DIR = join(DATA_DIR, 'capsules');
 export const AUTH_PATH     = join(DATA_DIR, 'auth.json');
 export const PUSHED_PATH   = join(DATA_DIR, 'pushed.json');
