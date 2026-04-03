@@ -41,16 +41,33 @@ try {
 
   // Register with central registry (only for public gists)
   // Must succeed — if it fails, roll back by deleting the public gist.
+  // Retry with backoff to handle GitHub API propagation delay after Gist creation.
   let registry;
   if (isPublic) {
     let registrationFailed = false;
     let registrationError = '';
-    try {
-      const r = await proxyFetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
-      const rd = await r.json();
-      if (!rd.ok) { registrationFailed = true; registrationError = rd.error || 'sync failed'; }
-      else registry = 'registered';
-    } catch { registrationFailed = true; registrationError = 'Worker unreachable'; }
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [2000, 3000, 5000]; // ms — escalating backoff
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt - 1]));
+      }
+      registrationFailed = false;
+      registrationError = '';
+      try {
+        const r = await proxyFetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
+        const rd = await r.json();
+        if (!rd.ok) {
+          registrationFailed = true;
+          registrationError = rd.error || 'sync failed';
+          // Only retry on "not found" errors (propagation delay); other errors are permanent
+          if (!/not found/i.test(registrationError)) break;
+        } else {
+          registry = 'registered';
+          break;
+        }
+      } catch { registrationFailed = true; registrationError = 'Worker unreachable'; break; }
+    }
 
     if (registrationFailed) {
       // Roll back: remove the public gist so it doesn't linger unregistered
