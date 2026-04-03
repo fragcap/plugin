@@ -79,6 +79,7 @@ Hit a wall? Search what others have learned:
 | `/fragcap:search <query>` | Search capsules from all FragCap users |
 | `/fragcap:list` | List your published capsules |
 | `/fragcap:update [gist-id]` | Append a follow-up finding to a published capsule |
+| `/fragcap:delete [gist-id]` | Permanently delete a published capsule from GitHub Gist |
 
 ## How It Works
 
@@ -144,11 +145,12 @@ fragcap/
 │   ├── generate-capsule.mjs      # Write capsule draft to disk
 │   ├── list-drafts.mjs           # List local drafts
 │   ├── preview-pii.mjs           # Scan draft for PII
-│   ├── delete-draft.mjs          # Delete a draft
+│   ├── delete-draft.mjs          # Delete a local draft
 │   ├── push.mjs                  # Push to Gist + register
-│   ├── list-gists.mjs            # List pushed capsules
+│   ├── list-gists.mjs            # List pushed capsules (paginated)
 │   ├── fetch-capsule.mjs         # Fetch a capsule from Gist
 │   ├── update.mjs                # Append update to a capsule
+│   ├── delete-gist.mjs           # Delete a published capsule
 │   ├── search.mjs                # Search the registry
 │   └── check-pending.mjs         # Check for pending drafts
 └── skills/
@@ -158,6 +160,7 @@ fragcap/
     ├── search/SKILL.md
     ├── list/SKILL.md
     ├── update/SKILL.md
+    ├── delete/SKILL.md
     └── capsule-knowledge/SKILL.md
 ```
 
@@ -187,7 +190,7 @@ No. The SessionEnd agent evaluates whether the session contained actionable know
 Yes. Drafts are plain JSON files in `~/.claude/plugins/data/fragcap/capsules/`. Edit them with any text editor, or ask Claude to modify them during `/fragcap:review`.
 
 **What if I push something I shouldn't have?**
-Capsules are stored as public GitHub Gists under your account. Delete them directly from [gist.github.com](https://gist.github.com).
+Run `/fragcap:delete <gist-id>` to permanently remove it. Note that the central search index may take up to 24 hours to reflect the deletion.
 
 **Does search require authentication?**
 No. The registry is served from GitHub Pages — no auth, no rate limit.
