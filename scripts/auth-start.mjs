@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Start GitHub Device Flow — prints verification_uri and user_code
-import { CLIENT_ID, DATA_DIR, writeJSON, output } from './lib/config.mjs';
+import { CLIENT_ID, DATA_DIR, writeJSON, output, proxyFetch } from './lib/config.mjs';
 import { join } from 'path';
 
 try {
-  const res = await fetch('https://github.com/login/device/code', {
+  const res = await proxyFetch('https://github.com/login/device/code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ client_id: CLIENT_ID })

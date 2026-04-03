@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node update.mjs <gist-id> <note> [status]
-import { WORKER_URL, ensureValidToken, output } from './lib/config.mjs';
+import { WORKER_URL, ensureValidToken, output, proxyFetch } from './lib/config.mjs';
 import { getGist, updateGist } from './lib/github.mjs';
 
 const [,, gistId, note, status] = process.argv;
@@ -29,9 +29,12 @@ try {
   const res = await updateGist(token, gistId, updated);
   if (res.status >= 400) { output({ error: `GitHub API error: ${res.data.message || res.status}` }); process.exit(1); }
 
+  // Registry sync is best-effort for updates (unlike push.mjs where first registration
+  // is mandatory). An update already persists on the gist itself; registry is a search index
+  // that will catch up on the next push or manual sync.
   let registry = 'synced';
   try {
-    const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gistId }) });
+    const r = await proxyFetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gistId }) });
     const rd = await r.json();
     if (!rd.ok) registry = rd.error || 'sync failed';
   } catch { registry = 'Worker unreachable — will sync later.'; }

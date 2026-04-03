@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node push.mjs <capsule-id> [anonymous|attributed]
-import { CAPSULES_DIR, PUSHED_PATH, AUTH_PATH, WORKER_URL, ensureValidToken, readJSON, writeJSON, output } from './lib/config.mjs';
+import { CAPSULES_DIR, PUSHED_PATH, AUTH_PATH, WORKER_URL, ensureValidToken, readJSON, writeJSON, output, proxyFetch } from './lib/config.mjs';
 import { createGist, deleteGist } from './lib/github.mjs';
 import { applyVisibility } from './lib/pii.mjs';
 import { join } from 'path';
@@ -24,8 +24,16 @@ try {
   const tagBrackets = (published.tags || []).map(t => `[${t}]`).join('');
   const description = `[fragcap]${tagBrackets} ${(published.problem || published.id).slice(0, 80)}`;
 
+  // Optimistic write — mark as pending before creating gist to prevent orphans
+  pushed[id] = 'pending';
+  await writeJSON(PUSHED_PATH, pushed);
+
   const { status, data: gist } = await createGist(token, description, published, isPublic);
-  if (status >= 400) { output({ error: `GitHub API error: ${gist.message || status}` }); process.exit(1); }
+  if (status >= 400) {
+    delete pushed[id];
+    await writeJSON(PUSHED_PATH, pushed);
+    output({ error: `GitHub API error: ${gist.message || status}` }); process.exit(1);
+  }
 
   pushed[id] = gist.id;
   await writeJSON(PUSHED_PATH, pushed);
@@ -38,7 +46,7 @@ try {
     let registrationFailed = false;
     let registrationError = '';
     try {
-      const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
+      const r = await proxyFetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
       const rd = await r.json();
       if (!rd.ok) { registrationFailed = true; registrationError = rd.error || 'sync failed'; }
       else registry = 'registered';
@@ -46,10 +54,15 @@ try {
 
     if (registrationFailed) {
       // Roll back: remove the public gist so it doesn't linger unregistered
-      await deleteGist(token, gist.id).catch(() => {});
-      // Undo the pushed record; leave the local draft intact so the user can retry.
-      delete pushed[id];
-      await writeJSON(PUSHED_PATH, pushed);
+      try {
+        await deleteGist(token, gist.id);
+        delete pushed[id];
+        await writeJSON(PUSHED_PATH, pushed);
+      } catch {
+        // Rollback itself failed — mark for manual cleanup
+        pushed[id] = `rollback_failed:${gist.id}`;
+        await writeJSON(PUSHED_PATH, pushed).catch(() => {});
+      }
       output({
         error: `Registration failed: ${registrationError}. The public Gist has been rolled back.`,
         suggest_secret: true,

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node search.mjs <query>
-import { PAGES_BASE, CACHE_DIR, readJSON, writeJSON, output } from './lib/config.mjs';
+import { PAGES_BASE, CACHE_DIR, readJSON, writeJSON, output, proxyFetch } from './lib/config.mjs';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 
@@ -22,7 +22,7 @@ async function fetchCached(url, cacheFile, ttl) {
   const cached = await readJSON(cachePath);
   if (cached && Date.now() - cached.ts < ttl) return cached.data;
   try {
-    const res = await fetch(url);
+    const res = await proxyFetch(url);
     if (!res.ok) return null;
     const data = await res.json();
     await writeJSON(cachePath, { ts: Date.now(), data });
@@ -34,11 +34,24 @@ async function fetchCached(url, cacheFile, ttl) {
 const manifest = await fetchCached(`${PAGES_BASE}/manifest.json`, 'manifest.json', MANIFEST_TTL);
 if (!manifest?.shards?.length) { output({ results: [], message: 'Registry not reachable or empty.', keywords }); process.exit(0); }
 
+async function pMap(items, fn, concurrency = 5) {
+  const results = [];
+  let i = 0;
+  async function worker() {
+    while (i < items.length) {
+      const idx = i++;
+      results[idx] = await fn(items[idx]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
+  return results;
+}
+
 const capsules = [];
-await Promise.all(manifest.shards.map(async name => {
+await pMap(manifest.shards, async (name) => {
   const shard = await fetchCached(`${PAGES_BASE}/shards/${name}`, `shard_${name}`, SHARD_TTL);
   if (shard?.capsules) capsules.push(...shard.capsules);
-}));
+});
 
 // ─── Score and rank ───────────────────────────────────────────────────────────
 function toBigrams(text) {

@@ -1,8 +1,9 @@
-// Zero-dependency GitHub API wrapper using Node built-in fetch
+// Zero-dependency GitHub API wrapper
+import { proxyFetch } from './config.mjs';
 const GITHUB_API = 'https://api.github.com';
 
 export async function githubAPI(method, path, token, body = null) {
-  const res = await fetch(`${GITHUB_API}${path}`, {
+  const res = await proxyFetch(`${GITHUB_API}${path}`, {
     method,
     headers: {
       'User-Agent': 'fragcap',
@@ -12,6 +13,13 @@ export async function githubAPI(method, path, token, body = null) {
     },
     ...(body ? { body: JSON.stringify(body) } : {})
   });
+  // Detect GitHub rate limiting early
+  if (res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0') {
+    const reset = res.headers.get('x-ratelimit-reset');
+    const wait = reset ? Math.ceil((reset * 1000 - Date.now()) / 60000) : '?';
+    return { status: 403, data: { message: `Rate limited. Resets in ~${wait} min.` } };
+  }
+
   let data = null;
   if (res.status !== 204) {
     try { data = await res.json(); }
@@ -37,10 +45,12 @@ export async function getGist(gistId, token = null) {
   return githubAPI('GET', `/gists/${gistId}`, token);
 }
 
+const MAX_PAGES = 20;
+
 export async function listGists(token) {
   const all = [];
   let page = 1;
-  while (true) {
+  while (page <= MAX_PAGES) {
     const { status, data } = await githubAPI('GET', `/gists?per_page=100&page=${page}`, token);
     if (status >= 400) return { status, data };
     all.push(...data);

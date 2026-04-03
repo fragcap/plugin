@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Single poll attempt for GitHub Device Flow
-import { CLIENT_ID, DATA_DIR, AUTH_PATH, readJSON, writeJSON, output } from './lib/config.mjs';
+import { CLIENT_ID, DATA_DIR, AUTH_PATH, readJSON, writeJSON, output, proxyFetch } from './lib/config.mjs';
 import { getAuthenticatedUser } from './lib/github.mjs';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
@@ -12,7 +12,7 @@ try {
   if (!pending?.device_code) { output({ success: false, error: 'No pending Device Flow. Run auth-start first.' }); process.exit(0); }
   if (Date.now() >= pending.expires_at) { await unlink(pendingPath).catch(() => {}); output({ success: false, error: 'Code expired. Please retry /fragcap:auth.' }); process.exit(0); }
 
-  const res = await fetch('https://github.com/login/oauth/access_token', {
+  const res = await proxyFetch('https://github.com/login/oauth/access_token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ client_id: CLIENT_ID, device_code: pending.device_code, grant_type: 'urn:ietf:params:oauth:grant-type:device_code' })
@@ -20,7 +20,12 @@ try {
   const data = await res.json();
 
   if (data.error === 'authorization_pending') { output({ success: false, pending: true, message: 'Waiting for user authorization. Call again in a few seconds.' }); process.exit(0); }
-  if (data.error === 'slow_down') { output({ success: false, pending: true, message: 'Rate limited. Call again in 10 seconds.' }); process.exit(0); }
+  if (data.error === 'slow_down') {
+    pending.interval = (pending.interval || 5) + 5;
+    await writeJSON(pendingPath, pending);
+    output({ success: false, pending: true, message: `Rate limited. Retry in ${pending.interval}s.` });
+    process.exit(0);
+  }
   if (data.error === 'expired_token') { await unlink(pendingPath).catch(() => {}); output({ success: false, error: 'Code expired. Please retry /fragcap:auth.' }); process.exit(0); }
   if (data.error) { output({ success: false, error: data.error_description || data.error }); process.exit(0); }
 
