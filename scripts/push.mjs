@@ -29,7 +29,7 @@ try {
 
   pushed[id] = gist.id;
   await writeJSON(PUSHED_PATH, pushed);
-  await unlink(draftPath).catch(() => {});
+  // Draft deletion is deferred until after registration succeeds (for public gists).
 
   // Register with central registry (only for public gists)
   // Must succeed — if it fails, roll back by deleting the public gist.
@@ -47,7 +47,7 @@ try {
     if (registrationFailed) {
       // Roll back: remove the public gist so it doesn't linger unregistered
       await deleteGist(token, gist.id).catch(() => {});
-      // Also undo the pushed record since we're treating this as not pushed
+      // Undo the pushed record; leave the local draft intact so the user can retry.
       delete pushed[id];
       await writeJSON(PUSHED_PATH, pushed);
       output({
@@ -60,6 +60,9 @@ try {
   } else {
     registry = 'skipped (secret gist — not searchable by others)';
   }
+
+  // Everything succeeded — now it is safe to remove the local draft.
+  await unlink(draftPath).catch(() => {});
 
   output({ success: true, gist_id: gist.id, url: gist.html_url, public: isPublic, registry });
 } catch (e) { output({ error: e.message }); process.exit(1); }
