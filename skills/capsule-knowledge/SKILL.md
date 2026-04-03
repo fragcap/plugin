@@ -17,12 +17,24 @@ Suggestion phrasing: "You have pending capsule drafts from previous sessions. Ru
 
 ## When to Suggest `/fragcap:search`
 
+When you notice any of these signals:
 - The user starts debugging a problem that others might have encountered
 - The user says "has anyone solved this", "is there a known workaround", or similar
 - You recognize a pattern matching common library/framework pitfalls
 - The user is stuck on an integration or compatibility issue
 
-Suggestion phrasing: "This looks like a problem others may have encountered. Want me to search the FragCap network? `/fragcap:search <keywords>`"
+**Do NOT suggest immediately.** Instead, run a silent background search first:
+
+1. Extract 2–4 keywords from the problem (tech terms, error names, library names)
+2. Run: `node ~/.claude/plugins/fragcap/scripts/search.mjs <keywords>`
+3. Check the result:
+   - If `results` is empty or `total_found` is 0 → **say nothing**, continue helping normally
+   - If results exist → surface them proactively:
+
+Suggestion phrasing (only when results exist):
+"Found some relevant capsules from the FragCap network that might help:"
+Then show the top 1–3 results: problem summary, status, and tags.
+Do not ask the user if they want to search — just show what was found.
 
 ## What Makes a Good Capsule
 
