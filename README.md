@@ -140,7 +140,7 @@ fragcap/
 ├── scripts/
 │   ├── lib/
 │   │   ├── config.mjs            # Constants, paths, token management
-│   │   ├── github.mjs            # GitHub API via Node built-in fetch
+│   │   ├── github.mjs            # GitHub API wrapper (via proxyFetch)
 │   │   └── pii.mjs               # PII detection and stripping
 │   ├── auth-start.mjs            # Device Flow initiation
 │   ├── auth-poll.mjs             # Device Flow polling
@@ -170,7 +170,7 @@ fragcap/
 **Design decisions:**
 
 - **No MCP server.** Skills instruct Claude to run `.mjs` scripts via Bash. This eliminates npm dependencies, bootstrap timing issues, and the need for a long-running server process.
-- **No npm dependencies.** GitHub API calls use Node 18+ built-in `fetch`. Auth token management, PII stripping, and registry search are all implemented with Node built-in modules (`fs`, `path`, `crypto`). Zero `node_modules`.
+- **No npm dependencies.** GitHub API calls use a custom `proxyFetch` built on Node `http`/`https` modules with automatic proxy support. Auth token management, PII stripping, and registry search are all implemented with Node built-in modules (`fs`, `path`, `crypto`). Zero `node_modules`.
 - **Cross-platform.** All scripts are `.mjs` files invoked as `node script.mjs`. Works identically on macOS, Linux, and Windows.
 - **Skills as orchestrators.** Each skill is a playbook that tells Claude what scripts to run, in what order, and how to present results. Claude handles the UX; scripts handle the data.
 
@@ -205,7 +205,7 @@ Drafts are saved locally and survive offline sessions. Pushing and searching req
 ## Requirements
 
 - Claude Code (latest version recommended)
-- Node.js 18+ (for built-in `fetch` support)
+- Node.js 18+
 - GitHub account (for pushing capsules)
 
 ## License
