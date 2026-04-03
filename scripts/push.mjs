@@ -6,8 +6,9 @@ import { applyVisibility } from './lib/pii.mjs';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
 
-const [,, id, visibility = 'anonymous'] = process.argv;
-if (!id) { output({ error: 'Usage: push.mjs <capsule-id> [anonymous|attributed]' }); process.exit(1); }
+const [,, id, visibility = 'anonymous', gistScope = 'public'] = process.argv;
+if (!id) { output({ error: 'Usage: push.mjs <capsule-id> [anonymous|attributed] [public|private]' }); process.exit(1); }
+const isPublic = gistScope !== 'private';
 
 try {
   const token = await ensureValidToken();
@@ -23,20 +24,25 @@ try {
   const tagBrackets = (published.tags || []).map(t => `[${t}]`).join('');
   const description = `[fragcap]${tagBrackets} ${(published.problem || published.id).slice(0, 80)}`;
 
-  const { status, data: gist } = await createGist(token, description, published);
+  const { status, data: gist } = await createGist(token, description, published, isPublic);
   if (status >= 400) { output({ error: `GitHub API error: ${gist.message || status}` }); process.exit(1); }
 
   pushed[id] = gist.id;
   await writeJSON(PUSHED_PATH, pushed);
   await unlink(draftPath).catch(() => {});
 
-  // Register with central registry (best-effort)
-  let registry = 'registered';
-  try {
-    const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
-    const rd = await r.json();
-    if (!rd.ok) registry = rd.error || 'sync failed';
-  } catch { registry = 'Worker unreachable — will sync later.'; }
+  // Register with central registry (only for public gists)
+  let registry;
+  if (isPublic) {
+    registry = 'registered';
+    try {
+      const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gist_id: gist.id }) });
+      const rd = await r.json();
+      if (!rd.ok) registry = rd.error || 'sync failed';
+    } catch { registry = 'Worker unreachable — will sync later.'; }
+  } else {
+    registry = 'skipped (private gist — not searchable by others)';
+  }
 
-  output({ success: true, gist_id: gist.id, url: gist.html_url, registry });
+  output({ success: true, gist_id: gist.id, url: gist.html_url, public: isPublic, registry });
 } catch (e) { output({ error: e.message }); process.exit(1); }
