@@ -69,9 +69,9 @@ Hit a wall? Search what others have learned:
 /fragcap:search pgbouncer connection pool timeout
 ```
 
-## Commands
+## Skills
 
-| Command | Description |
+| Skill | Description |
 |---------|-------------|
 | `/fragcap:auth` | Authenticate with GitHub via browser-based Device Flow |
 | `/fragcap:review` | Walk through pending drafts one by one — push, skip, or delete each |

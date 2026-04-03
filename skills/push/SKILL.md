@@ -37,10 +37,10 @@ Push a single draft capsule to GitHub Gist and register it in the central FragCa
 
 5. **Gist scope** — ask the user:
    - `public` (default): Gist is public, registered in the central index, searchable by others.
-   - `private`: Gist is secret (only accessible via URL), **not** registered — others cannot search for it.
+   - `secret`: Gist is unlisted (GitHub calls this "secret" — anyone with the URL can still view it, it just won't appear in search or Discover). **Not** registered in the central index.
 
-6. **Push** — run `push.mjs <draft-id> <visibility> <scope>` where scope is `public` or `private`.
+6. **Push** — run `push.mjs <draft-id> <visibility> <scope>` where scope is `public` or `secret`.
 
 7. **Result**:
-   - Success: show the Gist URL, public/private status, and registry status.
+   - Success: show the Gist URL, public/secret status, and registry status.
    - Failure: "Push failed: {error}. Your draft is still saved locally — try again later."

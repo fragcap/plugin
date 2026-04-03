@@ -7,8 +7,8 @@ import { join } from 'path';
 import { unlink } from 'fs/promises';
 
 const [,, id, visibility = 'anonymous', gistScope = 'public'] = process.argv;
-if (!id) { output({ error: 'Usage: push.mjs <capsule-id> [anonymous|attributed] [public|private]' }); process.exit(1); }
-const isPublic = gistScope !== 'private';
+if (!id) { output({ error: 'Usage: push.mjs <capsule-id> [anonymous|attributed] [public|secret]' }); process.exit(1); }
+const isPublic = gistScope !== 'secret' && gistScope !== 'private'; // 'private' kept for backwards compat
 
 try {
   const token = await ensureValidToken();

@@ -34,9 +34,22 @@ export async function getGist(gistId, token = null) {
 }
 
 export async function listGists(token) {
-  return githubAPI('GET', '/gists?per_page=100', token);
+  const all = [];
+  let page = 1;
+  while (true) {
+    const { status, data } = await githubAPI('GET', `/gists?per_page=100&page=${page}`, token);
+    if (status >= 400) return { status, data };
+    all.push(...data);
+    if (data.length < 100) break;
+    page++;
+  }
+  return { status: 200, data: all };
 }
 
 export async function getAuthenticatedUser(token) {
   return githubAPI('GET', '/user', token);
+}
+
+export async function deleteGist(token, gistId) {
+  return githubAPI('DELETE', `/gists/${gistId}`, token);
 }
