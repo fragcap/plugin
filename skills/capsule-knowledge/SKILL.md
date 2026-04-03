@@ -1,7 +1,6 @@
 ---
 name: capsule-knowledge
 description: Proactive guidance for when and how to suggest FragCap capsule commands
-disable-model-invocation: true
 ---
 
 # FragCap Capsule Knowledge
