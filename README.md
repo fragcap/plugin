@@ -97,7 +97,7 @@ Hit a wall? Search what others have learned:
 ├──────────────────────── Next SessionStart ──────────────────┤
 │                                                             │
 │   "You have 2 pending capsule draft(s)."                    │
-│   /fragcap:review → push / skip / delete each              │
+│   /fragcap:review → push / skip / delete each               │
 │                                                             │
 ├──────────────────────── Push ───────────────────────────────┤
 │                                                             │
