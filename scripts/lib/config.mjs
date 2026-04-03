@@ -41,33 +41,42 @@ function detectSystemProxy() {
     }
 
     if (process.platform === 'darwin') {
-      const services = _exec('networksetup -listnetworkserviceorder');
-      for (const svc of ['Wi-Fi', 'Ethernet', 'USB 10/100/1000 LAN']) {
-        if (!services.includes(svc)) continue;
-        for (const getter of ['-getsecurewebproxy', '-getwebproxy']) {
-          const out = _exec(`networksetup ${getter} "${svc}"`);
-          if (!/Enabled:\s*Yes/i.test(out)) continue;
-          const host = out.match(/Server:\s*(.+)/)?.[1]?.trim();
-          const port = out.match(/Port:\s*(\d+)/)?.[1]?.trim();
-          if (host && host !== '0.0.0.0')
-            return _normalize(`${host}:${port || 80}`);
+      try {
+        // Parse actual service names from system instead of hardcoding
+        const orderOut = _exec('networksetup -listnetworkserviceorder');
+        const svcNames = [...orderOut.matchAll(/^\(\d+\)\s+(.+)$/gm)].map(m => m[1].trim());
+        for (const svc of svcNames) {
+          for (const getter of ['-getsecurewebproxy', '-getwebproxy']) {
+            try {
+              const out = _exec(`networksetup ${getter} "${svc}"`);
+              if (!/Enabled:\s*Yes/i.test(out)) continue;
+              const host = out.match(/Server:\s*(.+)/)?.[1]?.trim();
+              const port = out.match(/Port:\s*(\d+)/)?.[1]?.trim();
+              if (host && host !== '0.0.0.0')
+                return _normalize(`${host}:${port || 80}`);
+            } catch { /* service may not support proxy queries */ }
+          }
         }
-      }
+      } catch { /* networksetup not available */ }
       return null;
     }
 
     if (process.platform === 'linux') {
-      const mode = _exec('gsettings get org.gnome.system.proxy mode')
-        .replace(/'/g, '');
-      if (mode !== 'manual') return null;
-      for (const schema of [
-        'org.gnome.system.proxy.https',
-        'org.gnome.system.proxy.http',
-      ]) {
-        const host = _exec(`gsettings get ${schema} host`).replace(/'/g, '');
-        const port = _exec(`gsettings get ${schema} port`);
-        if (host) return _normalize(`${host}:${port || 80}`);
-      }
+      // gsettings is GNOME-specific — gracefully skip on KDE, Xfce, headless, etc.
+      try {
+        const mode = _exec('gsettings get org.gnome.system.proxy mode')
+          .replace(/'/g, '');
+        if (mode === 'manual') {
+          for (const schema of [
+            'org.gnome.system.proxy.https',
+            'org.gnome.system.proxy.http',
+          ]) {
+            const host = _exec(`gsettings get ${schema} host`).replace(/'/g, '');
+            const port = _exec(`gsettings get ${schema} port`);
+            if (host) return _normalize(`${host}:${port || 80}`);
+          }
+        }
+      } catch { /* gsettings not available */ }
       return null;
     }
   } catch {

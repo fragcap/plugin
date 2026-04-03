@@ -1,8 +1,38 @@
 // PII detection and stripping — zero external dependencies
 import { createHash } from 'crypto';
+import { homedir } from 'os';
 
 export function anonHash(username, id) {
   return createHash('sha256').update(username + id).digest('hex').slice(0, 8);
+}
+
+/** Detect relevant drive letters from the current environment. */
+function detectDrives() {
+  const drives = new Set();
+  for (const src of [homedir(), process.env.USERPROFILE, process.env.HOMEDRIVE]) {
+    const m = (src || '').match(/^([A-Za-z]):/);
+    if (m) drives.add(m[1].toUpperCase());
+  }
+  if (drives.size === 0) drives.add('C'); // safe fallback
+  return [...drives];
+}
+
+/** Build path patterns for a username across all platforms. */
+function userPathPatterns(username) {
+  const drives = detectDrives();
+  return [
+    // macOS
+    `/Users/${username}`,
+    // Linux
+    `/home/${username}`,
+    // Windows — JSON-escaped backslash form (matches \\Users\\ in JSON.stringify output)
+    ...drives.map(d => `${d}:\\\\Users\\\\${username}`),
+    // Windows — forward-slash form
+    ...drives.map(d => `${d}:/Users/${username}`),
+    // WSL mount — both cases (WSL2 is typically lowercase)
+    ...drives.map(d => `/mnt/${d.toLowerCase()}/Users/${username}`),
+    ...drives.map(d => `/mnt/${d.toLowerCase()}/users/${username}`),
+  ];
 }
 
 function buildHomePattern() {
@@ -10,15 +40,14 @@ function buildHomePattern() {
   const osUser = process.env.USER || process.env.USERNAME || process.env.LOGNAME;
   if (osUser) usernames.add(osUser);
 
+  // Also extract from actual home directory in case env vars differ
+  const homeParts = homedir().split(/[/\\]/).filter(Boolean);
+  const homeUser = homeParts[homeParts.length - 1];
+  if (homeUser && homeUser !== 'root') usernames.add(homeUser);
+
   if (usernames.size === 0) return null;
 
-  const drives = ['C', 'D', 'E', 'F'];
-  const patterns = [...usernames].flatMap(u => [
-    `/Users/${u}`, `/home/${u}`,
-    ...drives.map(d => `${d}:\\\\Users\\\\${u}`),
-    ...drives.map(d => `${d}:/Users/${u}`),
-    ...drives.map(d => `/mnt/${d.toLowerCase()}/Users/${u}`)
-  ]);
+  const patterns = [...usernames].flatMap(u => userPathPatterns(u));
 
   return new RegExp(
     `(${patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi'
@@ -27,14 +56,7 @@ function buildHomePattern() {
 
 export function stripPII(obj, ghUsername) {
   const homePattern = buildHomePattern();
-  // Also add GitHub username paths
-  const drives = ['C', 'D', 'E', 'F'];
-  const ghPatterns = [
-    `/Users/${ghUsername}`, `/home/${ghUsername}`,
-    ...drives.map(d => `${d}:\\\\Users\\\\${ghUsername}`),
-    ...drives.map(d => `${d}:/Users/${ghUsername}`),
-    ...drives.map(d => `/mnt/${d.toLowerCase()}/Users/${ghUsername}`)
-  ];
+  const ghPatterns = userPathPatterns(ghUsername);
   const ghPattern = new RegExp(
     `(${ghPatterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi'
   );
@@ -61,9 +83,10 @@ export function applyVisibility(capsule, visibility, username) {
 export function detectPII(text) {
   const findings = [];
 
-  const pathRe = /(\/Users\/([^\/\s"]+)|\/home\/([^\/\s"]+)|C:\\Users\\([^\\"\\s]+)|\/mnt\/[a-z]\/Users\/([^\/\s"]+))/g;
+  // Any drive letter A-Z, both JSON-escaped (\\) and raw (\) backslash forms, plus Unix and WSL paths
+  const pathRe = /(\/Users\/([^\/\s"]+)|\/home\/([^\/\s"]+)|[A-Z]:\\\\Users\\\\([^\\\\"\\s]+)|[A-Z]:\\Users\\([^\\"\\s]+)|\/mnt\/[a-z]\/[Uu]sers\/([^\/\s"]+))/gi;
   for (const m of text.matchAll(pathRe)) {
-    const username = m[2] || m[3] || m[4] || m[5];
+    const username = m[2] || m[3] || m[4] || m[5] || m[6];
     findings.push({ type: 'file_path', original: m[0], suggestion: m[0].replace(username, 'username'), risk: 'identifies your OS username' });
   }
 
@@ -72,7 +95,7 @@ export function detectPII(text) {
     findings.push({ type: 'email', original: m[0], suggestion: '[email]', risk: 'personal or work email address' });
   }
 
-  const internalRe = /https?:\/\/[^\s"]*?(\.internal|\.corp\.|\\.intranet\.|internal[-.]|corp[-.])[^\s"]*/g;
+  const internalRe = /https?:\/\/[^\s"]{0,200}?(\.internal|\.corp\.|\.intranet\.|internal[-.]|corp[-.])[^\s"]{0,200}/g;
   for (const m of text.matchAll(internalRe)) {
     findings.push({ type: 'internal_url', original: m[0], suggestion: '[internal-url]', risk: 'internal or company-specific URL' });
   }

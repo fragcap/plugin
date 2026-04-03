@@ -8,8 +8,13 @@ import { join } from 'path';
 
 // Prefer stdin to avoid shell quoting issues with special characters
 let raw = process.argv[2];
-if (!raw) {
-  try { raw = (await readFile('/dev/stdin', 'utf8')).trim(); } catch { raw = null; }
+if (!raw && !process.stdin.isTTY) {
+  try {
+    const chunks = [];
+    for await (const chunk of process.stdin) chunks.push(chunk);
+    const stdinData = Buffer.concat(chunks).toString('utf8').trim();
+    if (stdinData) raw = stdinData;
+  } catch { raw = null; }
 }
 if (!raw) { output({ error: 'Usage: echo \'{"tags":[...],"problem":"...","status":"resolved"}\' | generate-capsule.mjs' }); process.exit(1); }
 
