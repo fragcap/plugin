@@ -9,9 +9,7 @@ if (proxyUrl) {
     const { ProxyAgent, setGlobalDispatcher } = await import('node:undici');
     setGlobalDispatcher(new ProxyAgent(proxyUrl));
   } catch {
-    console.error(JSON.stringify({
-      warning: 'Proxy configured but undici not available. Install undici or unset proxy vars.'
-    }));
+    console.log(JSON.stringify({ warning: 'Network request failed. If you are behind a proxy, upgrade to Node.js 22+ for automatic proxy support.' }, null, 2));
   }
 }
 
