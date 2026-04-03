@@ -1,7 +1,7 @@
 {
   "name": "fragcap",
   "version": "0.3.1",
-  "description": "Distills your explorations into shareable capsules. Auto-captures what you learned, pushes to GitHub Gist, and discovers relevant capsules from other users.",
+  "description": "Most explorations die with the session. FragCap captures them as structured capsules — the problem, the dead ends, the open threads — and makes them searchable by anyone starting something similar. Your unfinished thinking becomes their shortcut.",
   "author": {
     "name": "fragcap",
     "url": "https://github.com/fragcap"
