@@ -12,10 +12,12 @@ function buildHomePattern() {
 
   if (usernames.size === 0) return null;
 
+  const drives = ['C', 'D', 'E', 'F'];
   const patterns = [...usernames].flatMap(u => [
     `/Users/${u}`, `/home/${u}`,
-    `C:\\\\Users\\\\${u}`,
-    `/mnt/c/Users/${u}`, `/mnt/d/Users/${u}`
+    ...drives.map(d => `${d}:\\\\Users\\\\${u}`),
+    ...drives.map(d => `${d}:/Users/${u}`),
+    ...drives.map(d => `/mnt/${d.toLowerCase()}/Users/${u}`)
   ]);
 
   return new RegExp(
@@ -26,10 +28,12 @@ function buildHomePattern() {
 export function stripPII(obj, ghUsername) {
   const homePattern = buildHomePattern();
   // Also add GitHub username paths
+  const drives = ['C', 'D', 'E', 'F'];
   const ghPatterns = [
     `/Users/${ghUsername}`, `/home/${ghUsername}`,
-    `C:\\\\Users\\\\${ghUsername}`,
-    `/mnt/c/Users/${ghUsername}`, `/mnt/d/Users/${ghUsername}`
+    ...drives.map(d => `${d}:\\\\Users\\\\${ghUsername}`),
+    ...drives.map(d => `${d}:/Users/${ghUsername}`),
+    ...drives.map(d => `/mnt/${d.toLowerCase()}/Users/${ghUsername}`)
   ];
   const ghPattern = new RegExp(
     `(${ghPatterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi'

@@ -5,6 +5,7 @@ import { getGist } from './lib/github.mjs';
 
 const [,, gistId] = process.argv;
 if (!gistId) { output({ error: 'Usage: fetch-capsule.mjs <gist-id>' }); process.exit(1); }
+if (!/^[a-f0-9]{20,32}$/i.test(gistId)) { output({ error: 'Invalid gist id format.' }); process.exit(1); }
 
 try {
   const auth = await readJSON(AUTH_PATH);

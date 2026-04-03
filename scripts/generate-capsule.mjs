@@ -1,20 +1,25 @@
 #!/usr/bin/env node
-// Usage: node generate-capsule.mjs '<json>'
-// Accepts capsule data as a JSON string argument
+// Usage: echo '<json>' | node generate-capsule.mjs
+// Accepts capsule JSON on stdin (preferred) or as argv[2] for backwards compatibility
 import { CAPSULES_DIR, DATA_DIR, output } from './lib/config.mjs';
 import { randomUUID } from 'crypto';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, readFile } from 'fs/promises';
 import { join } from 'path';
 
-const raw = process.argv[2];
-if (!raw) { output({ error: 'Usage: generate-capsule.mjs \'{"tags":[...],"problem":"...","status":"resolved"}\'' }); process.exit(1); }
+// Prefer stdin to avoid shell quoting issues with special characters
+let raw = process.argv[2];
+if (!raw) {
+  try { raw = (await readFile('/dev/stdin', 'utf8')).trim(); } catch { raw = null; }
+}
+if (!raw) { output({ error: 'Usage: echo \'{"tags":[...],"problem":"...","status":"resolved"}\' | generate-capsule.mjs' }); process.exit(1); }
 
 try {
   const input = JSON.parse(raw);
   await mkdir(CAPSULES_DIR, { recursive: true });
 
   const now = new Date().toISOString();
-  const slug = (input.tags?.[0] || 'exploration') + '-' + now.slice(0, 7).replace('-', '');
+  const rawTag = (input.tags?.[0] || 'exploration').toLowerCase().replace(/[^a-z0-9\-]/g, '-').replace(/-+/g, '-').slice(0, 40);
+  const slug = rawTag + '-' + now.slice(0, 7).replace('-', '');
   const id = `${slug}-${randomUUID().slice(0, 8)}`;
 
   const capsule = {

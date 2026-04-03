@@ -1,6 +1,6 @@
 // FragCap configuration — zero external dependencies
 import { readFile, writeFile, mkdir } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join, dirname, basename, resolve } from 'path';
 // ─── Proxy setup (dynamic import, only when proxy env var is set) ───────────
 const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY
   || process.env.http_proxy || process.env.HTTP_PROXY;
@@ -21,11 +21,12 @@ export const WORKER_URL  = 'https://fragcap-worker.danuberiverferryman.workers.d
 export const PAGES_BASE  = 'https://fragcap.github.io/registry';
 
 // ─── Paths ─────────────────────────────────────────────────────────────────────
-export const DATA_DIR     = process.env.FRAGCAP_DATA || process.env.CLAUDE_PLUGIN_DATA;
-if (!DATA_DIR) {
+const rawDataDir = process.env.FRAGCAP_DATA || process.env.CLAUDE_PLUGIN_DATA;
+if (!rawDataDir) {
   console.error(JSON.stringify({ error: 'FRAGCAP_DATA / CLAUDE_PLUGIN_DATA not set.' }));
   process.exit(1);
 }
+export const DATA_DIR = resolve(rawDataDir);
 export const CAPSULES_DIR = join(DATA_DIR, 'capsules');
 export const AUTH_PATH    = join(DATA_DIR, 'auth.json');
 export const PUSHED_PATH  = join(DATA_DIR, 'pushed.json');
@@ -37,9 +38,12 @@ export async function readJSON(filePath, fallback = null) {
   catch { return fallback; }
 }
 
+const SENSITIVE_FILENAMES = new Set(['auth.json', 'device_flow_pending.json']);
+
 export async function writeJSON(filePath, data) {
   await mkdir(dirname(filePath), { recursive: true });
-  await writeFile(filePath, JSON.stringify(data, null, 2));
+  const isSensitive = SENSITIVE_FILENAMES.has(basename(filePath));
+  await writeFile(filePath, JSON.stringify(data, null, 2), isSensitive ? { mode: 0o600 } : undefined);
 }
 
 // ─── Output helper ─────────────────────────────────────────────────────────────

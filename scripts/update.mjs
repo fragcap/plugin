@@ -5,6 +5,7 @@ import { getGist, updateGist } from './lib/github.mjs';
 
 const [,, gistId, note, status] = process.argv;
 if (!gistId || !note) { output({ error: 'Usage: update.mjs <gist-id> <note> [open|resolved|abandoned]' }); process.exit(1); }
+if (!/^[a-f0-9]{20,32}$/i.test(gistId)) { output({ error: 'Invalid gist id format.' }); process.exit(1); }
 
 try {
   const token = await ensureValidToken();
@@ -14,6 +15,8 @@ try {
 
   const capsule = JSON.parse(file.content);
   const update = { date: new Date().toISOString().slice(0, 10), note };
+  const VALID_STATUSES = new Set(['open', 'resolved', 'abandoned']);
+  if (status && !VALID_STATUSES.has(status)) { output({ error: 'status must be one of: open, resolved, abandoned' }); process.exit(1); }
   if (status) update.status_change = status;
 
   const updated = {
