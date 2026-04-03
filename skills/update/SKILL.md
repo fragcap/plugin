@@ -12,6 +12,8 @@ Append a follow-up finding, correction, or status change to an already-pushed ca
 
     FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/<n>.mjs" [args]
 
+If a script exits with a non-zero code or returns `{ error: "..." }`, **stop immediately and surface the error to the user**. Never silently retry with a different command or skip the step.
+
 ## When to Activate
 
 - User runs `/fragcap:update` or `/fragcap:update <gist-id>`

@@ -12,6 +12,8 @@ Search across all FragCap users for capsules relevant to the user's current prob
 
     FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/<n>.mjs" [args]
 
+If a script exits with a non-zero code or returns `{ error: "..." }`, **stop immediately and surface the error to the user**. Never silently retry with a different command or skip the step.
+
 ## When to Activate
 
 - User runs `/fragcap:search <query>`
@@ -36,6 +38,11 @@ Search across all FragCap users for capsules relevant to the user's current prob
    For each selected result, run `fetch-capsule.mjs <gist-id>` and present the full capsule: problem, attempts, pitfalls, solution, snippet.
 
 5. **Apply** — if a capsule is relevant, suggest how it might apply to the user's current work.
+
+## Error Handling
+
+- If `search.mjs` fails: show the error message and stop.
+- If `fetch-capsule.mjs` fails on a selected result: show the error and offer to try another result.
 
 ## Guidelines
 

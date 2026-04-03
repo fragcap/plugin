@@ -6,7 +6,7 @@ const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY
   || process.env.http_proxy || process.env.HTTP_PROXY;
 if (proxyUrl) {
   try {
-    const { ProxyAgent, setGlobalDispatcher } = await import('undici');
+    const { ProxyAgent, setGlobalDispatcher } = await import('node:undici');
     setGlobalDispatcher(new ProxyAgent(proxyUrl));
   } catch {
     console.error(JSON.stringify({

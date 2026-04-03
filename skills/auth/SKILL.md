@@ -15,6 +15,8 @@ All FragCap scripts output JSON to stdout and need the data directory. Run them 
 
 On Windows/PowerShell, use `$env:FRAGCAP_DATA="..."` syntax instead.
 
+If a script exits with a non-zero code or returns `{ error: "..." }`, **stop immediately and surface the error to the user**. Never silently retry with a different command or skip the step.
+
 ## When to Activate
 
 - User runs `/fragcap:auth`

@@ -11,6 +11,8 @@ Show the user all capsules they have pushed to GitHub Gist.
 
     FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/<n>.mjs" [args]
 
+If a script exits with a non-zero code or returns `{ error: "..." }`, **stop immediately and surface the error to the user**. Never silently retry with a different command or skip the step.
+
 ## When to Activate
 
 - User runs `/fragcap:list`
@@ -23,3 +25,7 @@ Show the user all capsules they have pushed to GitHub Gist.
 3. **Display** — present as a table with description, status, updated_at, and URL.
 4. **Empty state** — if no capsules: "No published capsules yet. Use `/fragcap:review` to review local drafts and push them."
 5. **Next actions** — mention `/fragcap:update <gist-id>` and `/fragcap:search`.
+
+## Error Handling
+
+- If `list-gists.mjs` fails: show the error message and stop. Do not attempt an alternative approach silently.
