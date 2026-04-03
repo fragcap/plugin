@@ -26,7 +26,7 @@ When you notice any of these signals:
 **Do NOT suggest immediately.** Instead, run a silent background search first:
 
 1. Extract 2–4 keywords from the problem (tech terms, error names, library names)
-2. Run: `node ~/.claude/plugins/fragcap/scripts/search.mjs <keywords>`
+2. Run: `FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/search.mjs" <keywords>`
 3. Check the result:
    - If `results` is empty or `total_found` is 0 → **say nothing**, continue helping normally
    - If results exist → surface them proactively:
