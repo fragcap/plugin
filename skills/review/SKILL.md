@@ -29,10 +29,17 @@ Guide the user through reviewing locally saved capsule drafts. Drafts are auto-g
 
    a. **PII scan** — run `preview-pii.mjs <draft-id>`. Display findings if any. If clean: "No PII detected."
 
-   b. **Ask for decision** — three choices per draft:
-   - **Push** — ask for visibility (anonymous/attributed), then run `push.mjs <draft-id> <visibility>`
-   - **Skip** — keep the draft for later, move to next
-   - **Delete** — run `delete-draft.mjs <draft-id>` to permanently remove
+   b. **Ask for decision** — present numbered options inline, do not ask the user to type free text:
+   ```
+   [1] Push  [2] Skip  [3] Delete
+   ```
+   - **1 Push** — present visibility options:
+     ```
+     [1] anonymous (default)  [2] attributed
+     ```
+     Then run `push.mjs <draft-id> <visibility>`
+   - **2 Skip** — keep the draft for later, move to next
+   - **3 Delete** — run `delete-draft.mjs <draft-id>` to permanently remove
 
 4. **Summary** — after all drafts are processed:
    ```

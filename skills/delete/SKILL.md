@@ -23,11 +23,17 @@ Permanently delete a capsule you have pushed to GitHub Gist.
 
 2. **Select capsule**:
    - If `$ARGUMENTS` is provided, use it as `gist_id`.
-   - Otherwise, run `list-gists.mjs` to show the user's capsules. Ask them to pick one.
+   - Otherwise, run `list-gists.mjs` and show a numbered list. Present options inline — user replies with a number:
+     ```
+     [1] <problem summary>  [2] <problem summary>  ...
+     ```
 
-3. **Confirm** — this is irreversible. Ask:
-   > "Delete capsule `{gist-id}`? This permanently removes the Gist from GitHub and cannot be undone. (yes/no)"
-   - If not confirmed: stop.
+3. **Confirm** — this is irreversible. Present options inline:
+   > "Delete `{problem summary}` (`{gist-id}`)? This permanently removes the Gist from GitHub and cannot be undone."
+   ```
+   [1] Yes, delete  [2] Cancel
+   ```
+   - If user picks 2 or anything other than 1: stop.
 
 4. **Delete** — run `delete-gist.mjs <gist-id>`.
 

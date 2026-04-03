@@ -23,13 +23,19 @@ Append a follow-up finding, correction, or status change to an already-pushed ca
 
 2. **Select capsule**:
    - If `$ARGUMENTS` is provided, use it as `gist_id`.
-   - Otherwise, run `list-gists.mjs` to show the user's capsules. Ask them to pick one.
+   - Otherwise, run `list-gists.mjs` and show a numbered list. Present options inline — user replies with a number:
+     ```
+     [1] <problem summary>  [2] <problem summary>  ...
+     ```
 
 3. **Show current state** — run `fetch-capsule.mjs <gist-id>` and display problem, status, tags, attempts, pitfalls, solution, and previous updates.
 
-4. **Collect update** — ask the user:
-   - **Note**: "What's the new finding, correction, or follow-up?" (required)
-   - **Status change**: "Change status? (open / resolved / abandoned, or leave unchanged)" (optional)
+4. **Collect update**:
+   - **Note**: ask the user "What's the new finding, correction, or follow-up?" (free text, required)
+   - **Status change**: present options inline — user replies with a number:
+     ```
+     [1] keep current  [2] open  [3] resolved  [4] abandoned
+     ```
 
 5. **Apply** — run `update.mjs <gist-id> "<note>" [status]`.
 

@@ -29,7 +29,11 @@ Search across all FragCap users for capsules relevant to the user's current prob
    - If no results: "No matching capsules found. Try broader keywords or different terms."
    - If `total_found` > 5: mention there are more results.
 
-4. **Detail on demand** — ask which results the user wants to explore. For each selected result, run `fetch-capsule.mjs <gist-id>` and present the full capsule: problem, attempts, pitfalls, solution, snippet.
+4. **Detail on demand** — present options inline matching the numbered list above, do not ask the user to type a gist ID:
+   ```
+   [1] View details  [2] View details  ...  [0] Done
+   ```
+   For each selected result, run `fetch-capsule.mjs <gist-id>` and present the full capsule: problem, attempts, pitfalls, solution, snippet.
 
 5. **Apply** — if a capsule is relevant, suggest how it might apply to the user's current work.
 

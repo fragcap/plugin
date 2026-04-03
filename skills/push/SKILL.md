@@ -23,21 +23,31 @@ Push a single draft capsule to GitHub Gist and register it in the central FragCa
 
 2. **Select draft**:
    - If `$ARGUMENTS` is provided, use it as the draft ID directly.
-   - Otherwise, run `list-drafts.mjs` and show a numbered list. Ask the user to pick one.
+   - Otherwise, run `list-drafts.mjs` and show a numbered list. Present options inline — user replies with a number:
+     ```
+     [1] <problem summary>  [2] <problem summary>  ...
+     ```
    - If no drafts exist: "No local drafts to push. Drafts are auto-generated after sessions."
 
 3. **PII preview** — run `preview-pii.mjs <draft-id>`.
    - Show findings with risk levels and suggested replacements.
-   - If findings exist, let the user confirm they want to proceed.
+   - If findings exist, present a confirmation inline:
+     ```
+     [1] Proceed anyway  [2] Cancel
+     ```
    - If clean: "No PII detected."
 
-4. **Visibility** — ask the user:
-   - `anonymous` (default): author = `gh:anonymous-{hash}`, PII auto-stripped
-   - `attributed`: author = `gh:{username}`, content as-is
+4. **Visibility** — present options inline, do not ask the user to type:
+   ```
+   [1] anonymous (default) — author replaced with hash, PII auto-stripped
+   [2] attributed — published with your GitHub username
+   ```
 
-5. **Gist scope** — ask the user:
-   - `public` (default): Gist is public, registered in the central index, searchable by others.
-   - `secret`: Gist is unlisted (GitHub calls this "secret" — anyone with the URL can still view it, it just won't appear in search or Discover). **Not** registered in the central index.
+5. **Gist scope** — present options inline:
+   ```
+   [1] public (default) — searchable by others, registered in central index
+   [2] secret — unlisted, not registered in index
+   ```
 
 6. **Push** — run `push.mjs <draft-id> <visibility> <scope>` where scope is `public` or `secret`.
 
