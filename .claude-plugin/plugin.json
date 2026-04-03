@@ -3,10 +3,13 @@
   "version": "0.3.0",
   "description": "Distills your explorations into shareable capsules. Auto-captures what you learned, pushes to GitHub Gist, and discovers relevant capsules from other users.",
   "author": {
-    "name": "fragcap"
+    "name": "fragcap",
+    "url": "https://github.com/fragcap"
   },
   "homepage": "https://github.com/fragcap/fragcap",
   "repository": "https://github.com/fragcap/fragcap",
   "license": "MIT",
-  "keywords": ["knowledge", "capsule", "gist", "sharing", "discovery"]
+  "keywords": ["knowledge", "capsule", "gist", "sharing", "discovery"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

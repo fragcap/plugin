@@ -1,6 +1,12 @@
 // FragCap configuration — zero external dependencies
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
+import { ProxyAgent, setGlobalDispatcher } from 'undici';
+
+// ─── Proxy setup (respect system proxy env vars, no-op if unset) ───────────
+const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY
+  || process.env.http_proxy || process.env.HTTP_PROXY;
+if (proxyUrl) setGlobalDispatcher(new ProxyAgent(proxyUrl));
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 export const CLIENT_ID   = 'Iv23liqwgua8sg2xc1v3';
