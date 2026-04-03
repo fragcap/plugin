@@ -38,7 +38,8 @@ if (needsInstall) {
     console.error('[fragcap] Dependencies installed.');
   } catch (e) {
     console.error('[fragcap] npm install failed:', e.message);
-    // non-fatal: plugin may still work if deps exist
+    // Remove copied package.json so next SessionStart retries the install
+    try { unlinkSync(pkgDst); } catch {}
   }
 }
 
@@ -56,7 +57,7 @@ if (existsSync(flagPath)) {
 
     if (draftCount > 0) {
       // Output to stdout so Claude sees the message
-      console.log(`You have ${draftCount} pending capsule draft(s). Run /fragcap:review to review them.`);
+      console.error(`You have ${draftCount} pending capsule draft(s). Run /fragcap:review to review them.`);
     }
 
     // Clear the flag after notifying

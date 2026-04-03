@@ -62,9 +62,22 @@ function anonHash(username, id) {
   return createHash('md5').update(username + id).digest('hex').slice(0, 6);
 }
 
-function stripPII(obj, username) {
+function stripPII(obj, ghUsername) {
+  // Collect usernames to scrub: GitHub username + OS username (they often differ)
+  const usernames = new Set([ghUsername]);
+  const osUser = process.env.USER || process.env.USERNAME || process.env.LOGNAME;
+  if (osUser) usernames.add(osUser);
+
+  const patterns = [...usernames].flatMap(u => [
+    `/Users/${u}`,
+    `/home/${u}`,
+    `C:\\\\Users\\\\${u}`,
+    `/mnt/c/Users/${u}`,    // WSL
+    `/mnt/d/Users/${u}`     // WSL alternate drive
+  ]);
+
   const homePattern = new RegExp(
-    `(/Users/${username}|/home/${username}|C:\\\\Users\\\\${username})`,
+    `(${patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
     'gi'
   );
   const str = JSON.stringify(obj)
@@ -368,7 +381,6 @@ async function tool_list_local_drafts() {
 
 async function tool_list_pushed_capsules() {
   const token = await ensureValidToken();
-  const auth = await readJSON(AUTH_PATH);
   const gh = octokit(token);
   const { data: gists } = await gh.gists.list({ per_page: 100 });
   const capsules = gists
@@ -583,7 +595,7 @@ const TOOLS = [
   },
   {
     name: 'device_flow_poll',
-    description: 'Poll GitHub until the user completes authorization in the browser. Call after device_flow_start. Blocks until success or timeout (~15 min).',
+    description: 'Single poll attempt for GitHub Device Flow authorization. Call after device_flow_start. Returns immediately — call repeatedly until success or expiry.',
     inputSchema: { type: 'object', properties: {} }
   },
   {

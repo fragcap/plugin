@@ -30,9 +30,10 @@ Authenticate the user with GitHub using the App Device Flow. The entire flow hap
    Waiting for authorization...
    ```
 
-3. **Poll for completion** — call the `device_flow_poll` MCP tool.
-   - This tool **blocks** while polling GitHub (up to ~15 minutes).
-   - It returns once the user authorizes in the browser or the code expires.
+3. **Poll for completion** — call the `device_flow_poll` MCP tool repeatedly.
+   - Each call is a **single poll attempt** that returns immediately.
+   - If `pending: true`, wait a few seconds and call again.
+   - Continue until `success: true` or the code expires.
 
 4. **Handle result**:
    - `success: true` — confirm: "Authenticated as @{username}. You can now use /fragcap:push, /fragcap:list, and other commands."

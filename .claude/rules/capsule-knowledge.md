@@ -1,9 +1,3 @@
----
-name: capsule-knowledge
-description: Background knowledge about FragCap capsules — when to suggest review or search, what makes a good capsule. Loaded automatically during exploration and debugging sessions.
-user-invocable: false
----
-
 # FragCap Capsule Knowledge
 
 The FragCap plugin is available in this session. Use this knowledge to proactively help the user leverage it.
