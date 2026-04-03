@@ -39,13 +39,15 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
    Waiting for authorization...
    ```
 
-3. **Poll for completion** — run: `FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/auth-poll.mjs"` repeatedly.
-   - Each call is a **single poll attempt** that returns immediately.
-   - If `pending: true`, wait a few seconds and call again.
-   - Continue until `success: true` or the code expires.
+3. **Stop and wait for the user** — after displaying the URL and code, **do not poll**. Simply tell the user:
+   ```
+   After you've authorized in the browser, send me any message and I'll check the result.
+   ```
+   Then **end your turn**. Do not loop, sleep, or call auth-poll.mjs yet.
 
-4. **Handle result**:
+4. **Poll on user's next message** — when the user sends a follow-up message, run: `FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/auth-poll.mjs"` **once**.
    - `success: true` — confirm: "Authenticated as @{username}. You can now use /fragcap:push, /fragcap:list, and other commands."
+   - `pending: true` — tell the user authorization hasn't completed yet, ask them to finish in the browser and send another message.
    - `success: false` with `error` — show the error message. If timeout or code expired, suggest running `/fragcap:auth` again.
 
 ## Important
