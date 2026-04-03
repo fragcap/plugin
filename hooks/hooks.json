@@ -1,11 +1,12 @@
 {
   "hooks": {
-    "Stop": [
+    "SessionEnd": [
       {
         "hooks": [
           {
-            "type": "command",
-            "command": "NODE_PATH=\"${CLAUDE_PLUGIN_DATA}/node_modules\" node \"${CLAUDE_PLUGIN_ROOT}/scripts/generate-capsule.js\""
+            "type": "prompt",
+            "prompt": "Evaluate this session. If it contains actionable knowledge (concrete attempts with outcomes, specific pitfalls, or working solutions), call the generate_capsule MCP tool to save a structured capsule draft. Use specific tags (library names, API names, error types — never generic tags like 'javascript' or 'bug'). Skip if the session was trivial (fewer than 4 meaningful exchanges or no tool use). Scrub all PII: replace file paths with generic equivalents, replace emails with [email], remove API keys/tokens/credentials, replace person names with roles.",
+            "async": true
           }
         ]
       }

@@ -502,6 +502,39 @@ async function tool_delete_draft({ id }) {
   }
 }
 
+async function tool_generate_capsule({ tags, problem, attempts, pitfalls, solution, snippet, status }) {
+  await mkdir(CAPSULES_DIR, { recursive: true });
+
+  const now = new Date().toISOString();
+  const slug = (tags?.[0] || 'exploration') + '-' + now.slice(0, 7).replace('-', '');
+  const hash = createHash('md5').update(now + Math.random()).digest('hex').slice(0, 4);
+  const id = `${slug}-${hash}`;
+
+  const capsule = {
+    schema_version: 1,
+    id,
+    tags: tags || [],
+    problem: problem || '',
+    attempts: attempts || [],
+    pitfalls: pitfalls || [],
+    solution: solution || null,
+    snippet: snippet || null,
+    status: status || 'resolved',
+    created_at: now,
+    updated_at: now,
+    visibility: 'anonymous',
+    author: 'gh:anonymous-pending',
+    updates: []
+  };
+
+  await writeFile(join(CAPSULES_DIR, `${id}.json`), JSON.stringify(capsule, null, 2));
+
+  // Signal pending review
+  await writeFile(join(DATA_DIR, 'pending_review_flag'), String(Date.now()));
+
+  return { success: true, id, path: join(CAPSULES_DIR, `${id}.json`) };
+}
+
 async function tool_preview_pii({ id }) {
   const draft = await readJSON(join(CAPSULES_DIR, `${id}.json`));
   if (!draft) return { error: `Draft ${id} not found locally.` };
@@ -629,6 +662,34 @@ const TOOLS = [
     }
   },
   {
+    name: 'generate_capsule',
+    description: 'Save a structured knowledge capsule to local drafts. Called by the main model after analyzing a session — zero AI logic, just writes the file.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tags: { type: 'array', items: { type: 'string' }, description: 'Specific tags (library names, API names, error types). Never generic.' },
+        problem: { type: 'string', description: 'One sentence: what was being solved' },
+        attempts: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              tried: { type: 'string' },
+              outcome: { type: 'string' }
+            },
+            required: ['tried', 'outcome']
+          },
+          description: 'What was attempted and what happened'
+        },
+        pitfalls: { type: 'array', items: { type: 'string' }, description: 'Specific traps or gotchas' },
+        solution: { type: 'string', description: 'What finally worked, or null if unresolved' },
+        snippet: { type: 'string', description: 'Optional directly-usable code or prompt' },
+        status: { type: 'string', enum: ['resolved', 'open', 'abandoned'], description: 'Resolution status' }
+      },
+      required: ['tags', 'problem', 'status']
+    }
+  },
+  {
     name: 'preview_pii',
     description: 'Scan a local draft for PII patterns before push — does not modify the draft',
     inputSchema: {
@@ -650,7 +711,8 @@ const TOOL_HANDLERS = {
   fetch_capsule:        tool_fetch_capsule,
   update_capsule:       tool_update_capsule,
   delete_draft:         tool_delete_draft,
-  preview_pii:          tool_preview_pii
+  preview_pii:          tool_preview_pii,
+  generate_capsule:     tool_generate_capsule
 };
 
 // ─── Server setup ──────────────────────────────────────────────────────────────
