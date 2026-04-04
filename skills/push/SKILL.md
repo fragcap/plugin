@@ -6,11 +6,13 @@ argument-hint: [draft-id]
 
 # Push Capsule
 
-Push a single draft capsule to GitHub Gist and register it in the central FragCap registry.
+Push a single draft capsule (SKILL.md) to GitHub Gist and register it in the central FragCap registry.
 
 ## Script Convention
 
     FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/<n>.mjs" [args]
+
+On Windows/PowerShell, use `$env:FRAGCAP_DATA="..."` syntax instead.
 
 If a script exits with a non-zero code or returns `{ error: "..." }`, **stop immediately and surface the error to the user**. Never silently retry with a different command or skip the step.
 
@@ -54,7 +56,7 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
 6. **Push** — run `push.mjs <draft-id> <visibility> <scope>` where scope is `public` or `secret`.
 
 7. **Result**:
-   - Success: show the Gist URL, public/secret status, and registry status.
+   - Success: show the Gist URL, public/secret status, and registry status. Mention that others can install this capsule with `/fragcap:install <gist-id>`.
    - General failure: "Push failed: {error}. Your draft is still saved locally — try again later."
    - **Public registration failure** (response contains `suggest_secret: true`):
      - The public Gist has already been rolled back (deleted) automatically.

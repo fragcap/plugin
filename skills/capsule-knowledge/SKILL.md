@@ -27,6 +27,48 @@ After the user resolves a non-trivial problem, you may **suggest** (not auto-cre
 
 ## **⚠️ Language Requirement: All capsules MUST be written in English — including problem, solution, pitfalls, attempts, tags, and update notes. Even if the user's conversation is in another language, always generate and push capsule content in English.**
 
+## Capsule Format
+
+Each capsule is a SKILL.md file — a markdown document with YAML frontmatter that Claude Code can load directly as a skill. Example:
+
+```markdown
+---
+id: pgbouncer-pool-202604-a1b2c3d4
+description: "Connection pool exhaustion under load with PgBouncer"
+tags: ["postgres", "pgbouncer", "connection-pool"]
+status: resolved
+visibility: anonymous
+author: "gh:anonymous-1368de02"
+created_at: 2026-04-04T12:00:00.000Z
+updated_at: 2026-04-04T12:00:00.000Z
+---
+
+# Pgbouncer
+
+## When to Activate
+
+Use this capsule when encountering: Connection pool exhaustion under load with PgBouncer
+
+## Problem
+
+Connection pool exhaustion under load with PgBouncer in production.
+
+## What Does NOT Work
+
+- **Increased pool_size to 200** — Delayed but didn't fix
+- **Switched to transaction pooling mode** — Broke prepared statements
+
+## Pitfalls
+
+- PgBouncer silently drops idle connections after server_idle_timeout
+
+## Fix
+
+Set server_idle_timeout=0 and use client-side keepalive instead.
+```
+
+Unlike JSON capsules, SKILL.md capsules can be installed directly into any project's `.claude/skills/` directory, where Claude Code will automatically load them as context.
+
 ## What Makes a Good Capsule
 
 - A specific, non-obvious problem with a clear resolution path
@@ -66,3 +108,4 @@ Suggestion phrasing: "Gist visibility can't be changed after creation. I can del
 | `/fragcap:list` | List user's published capsules |
 | `/fragcap:update` | Append update to a published capsule |
 | `/fragcap:delete` | Delete a published capsule |
+| `/fragcap:install` | Install a capsule as a local skill |

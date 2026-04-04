@@ -6,7 +6,7 @@ argument-hint: [gist-id]
 
 # Delete Published Capsule
 
-Permanently delete a capsule you have pushed to GitHub Gist.
+Permanently delete a capsule (SKILL.md) you have pushed to GitHub Gist.
 
 ## Script Convention
 
@@ -40,7 +40,7 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
 4. **Delete** — run `delete-gist.mjs <gist-id>`.
 
 5. **Result**:
-   - Success: "Deleted. The Gist has been removed from GitHub. Note: the central registry index may take up to 24 hours to reflect this — cached search results could still show it temporarily."
+   - Success: "Deleted. The Gist has been removed from GitHub. Note: the central registry index may take up to 24 hours to reflect this — cached search results could still show it temporarily. If you have this capsule installed locally in `.claude/skills/`, you may want to remove it manually."
    - Error: show the message.
 
 ## Note on Registry

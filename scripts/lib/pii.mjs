@@ -25,11 +25,11 @@ function userPathPatterns(username) {
     `/Users/${username}`,
     // Linux
     `/home/${username}`,
-    // Windows — JSON-escaped backslash form (matches \\Users\\ in JSON.stringify output)
+    // Windows — JSON-escaped backslash form
     ...drives.map(d => `${d}:\\\\Users\\\\${username}`),
     // Windows — forward-slash form
     ...drives.map(d => `${d}:/Users/${username}`),
-    // WSL mount — both cases (WSL2 is typically lowercase)
+    // WSL mount
     ...drives.map(d => `/mnt/${d.toLowerCase()}/Users/${username}`),
     ...drives.map(d => `/mnt/${d.toLowerCase()}/users/${username}`),
   ];
@@ -40,7 +40,6 @@ function buildHomePattern() {
   const osUser = process.env.USER || process.env.USERNAME || process.env.LOGNAME;
   if (osUser) usernames.add(osUser);
 
-  // Also extract from actual home directory in case env vars differ
   const homeParts = homedir().split(/[/\\]/).filter(Boolean);
   const homeUser = homeParts[homeParts.length - 1];
   if (homeUser && homeUser !== 'root') usernames.add(homeUser);
@@ -54,20 +53,51 @@ function buildHomePattern() {
   );
 }
 
-export function stripPII(obj, ghUsername) {
+/** Strip PII from a plain text string (markdown content). */
+export function stripPIIText(text, ghUsername) {
   const homePattern = buildHomePattern();
   const ghPatterns = userPathPatterns(ghUsername);
   const ghPattern = new RegExp(
     `(${ghPatterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi'
   );
 
-  let str = JSON.stringify(obj);
+  let str = text;
   if (homePattern) str = str.replace(homePattern, '/Users/username');
   str = str.replace(ghPattern, '/Users/username');
   str = str.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[email]');
+  return str;
+}
+
+/** Strip PII from a JSON object (legacy support). */
+export function stripPII(obj, ghUsername) {
+  let str = JSON.stringify(obj);
+  str = stripPIIText(str, ghUsername);
   return JSON.parse(str);
 }
 
+/**
+ * Apply visibility to a SKILL.md content string.
+ * Returns the modified markdown string with updated frontmatter.
+ */
+export function applyVisibilityMd(content, visibility, username, capsuleId) {
+  let result = content;
+
+  if (visibility === 'anonymous') {
+    const anonAuthor = `gh:anonymous-${anonHash(username, capsuleId)}`;
+    // Update frontmatter fields
+    result = result.replace(/^(visibility:\s*).+$/m, `$1anonymous`);
+    result = result.replace(/^(author:\s*).+$/m, `$1"${anonAuthor}"`);
+    // Strip PII from the entire content
+    result = stripPIIText(result, username);
+  } else {
+    result = result.replace(/^(visibility:\s*).+$/m, `$1attributed`);
+    result = result.replace(/^(author:\s*).+$/m, `$1"gh:${username}"`);
+  }
+
+  return result;
+}
+
+/** Legacy JSON visibility (kept for backwards compat). */
 export function applyVisibility(capsule, visibility, username) {
   const c = structuredClone(capsule);
   if (visibility === 'anonymous') {
@@ -83,7 +113,6 @@ export function applyVisibility(capsule, visibility, username) {
 export function detectPII(text) {
   const findings = [];
 
-  // Any drive letter A-Z, both JSON-escaped (\\) and raw (\) backslash forms, plus Unix and WSL paths
   const pathRe = /(\/Users\/([^\/\s"]+)|\/home\/([^\/\s"]+)|[A-Z]:\\\\Users\\\\([^\\\\"\\s]+)|[A-Z]:\\Users\\([^\\"\\s]+)|\/mnt\/[a-z]\/[Uu]sers\/([^\/\s"]+))/gi;
   for (const m of text.matchAll(pathRe)) {
     const username = m[2] || m[3] || m[4] || m[5] || m[6];

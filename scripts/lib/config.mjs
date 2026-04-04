@@ -404,3 +404,45 @@ export async function ensureValidToken() {
 
   return _refreshPromise;
 }
+
+// ─── Frontmatter parser (for SKILL.md capsules) ───────────────────────────────
+
+/**
+ * Parse YAML-like frontmatter from a markdown string.
+ * Returns { meta: {...}, body: "..." }.
+ */
+export function parseFrontmatter(content) {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return { meta: {}, body: content };
+
+  const meta = {};
+  for (const line of match[1].split('\n')) {
+    const m = line.match(/^(\w[\w_-]*)\s*:\s*(.+)$/);
+    if (!m) continue;
+    let val = m[2].trim();
+    // Parse arrays: [a, b, c]
+    if (val.startsWith('[') && val.endsWith(']')) {
+      val = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+    }
+    // Strip surrounding quotes
+    else if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    meta[m[1]] = val;
+  }
+  return { meta, body: match[2] };
+}
+
+/**
+ * Extract a section's content from markdown body by heading name.
+ */
+export function extractSection(body, heading) {
+  const re = new RegExp(`^##\\s+${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&')}\\s*$`, 'im');
+  const match = body.match(re);
+  if (!match) return '';
+  const start = match.index + match[0].length;
+  const rest = body.slice(start);
+  const nextHeading = rest.match(/^##\s+/m);
+  const section = nextHeading ? rest.slice(0, nextHeading.index) : rest;
+  return section.trim();
+}

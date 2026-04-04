@@ -8,7 +8,7 @@ const [,, id] = process.argv;
 if (!id) { output({ error: 'Usage: delete-draft.mjs <draft-id>' }); process.exit(1); }
 if (!/^[a-zA-Z0-9][a-zA-Z0-9\-_]{0,100}$/.test(id)) { output({ error: 'Invalid draft id.' }); process.exit(1); }
 
-const target = resolve(join(CAPSULES_DIR, `${id}.json`));
+const target = resolve(join(CAPSULES_DIR, `${id}.md`));
 if (!target.startsWith(resolve(CAPSULES_DIR))) { output({ error: 'Invalid draft id.' }); process.exit(1); }
 
 try {

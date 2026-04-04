@@ -9,9 +9,8 @@ try { await access(flagPath); } catch { process.exit(0); }
 
 try {
   const files = await readdir(CAPSULES_DIR).catch(() => []);
-  const count = files.filter(f => f.endsWith('.json')).length;
+  const count = files.filter(f => f.endsWith('.md')).length;
   if (count > 0) {
-    // stdout on SessionStart is injected as context Claude can see
     console.log(`You have ${count} pending capsule draft(s). Run /fragcap:review to review them.`);
   }
   await unlink(flagPath);

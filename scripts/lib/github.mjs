@@ -31,13 +31,13 @@ export async function githubAPI(method, path, token, body = null) {
 export async function createGist(token, description, content, isPublic = true) {
   return githubAPI('POST', '/gists', token, {
     description, public: isPublic,
-    files: { 'capsule.json': { content: JSON.stringify(content, null, 2) } }
+    files: { 'SKILL.md': { content } }
   });
 }
 
 export async function updateGist(token, gistId, content) {
   return githubAPI('PATCH', `/gists/${gistId}`, token, {
-    files: { 'capsule.json': { content: JSON.stringify(content, null, 2) } }
+    files: { 'SKILL.md': { content } }
   });
 }
 

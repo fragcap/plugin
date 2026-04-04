@@ -6,7 +6,9 @@ argument-hint: [gist-id]
 
 # Update Capsule
 
-Append a follow-up finding, correction, or status change to an already-pushed capsule.
+Append a follow-up finding, correction, or status change to an already-pushed capsule (SKILL.md).
+
+Updates are appended as `## Update (YYYY-MM-DD)` sections at the end of the SKILL.md file.
 
 ## Script Convention
 
@@ -30,7 +32,7 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
      [1] <problem summary>  [2] <problem summary>  ...
      ```
 
-3. **Show current state** — run `fetch-capsule.mjs <gist-id>` and display problem, status, tags, attempts, pitfalls, solution, and previous updates.
+3. **Show current state** — run `fetch-capsule.mjs <gist-id>` and display problem, status, tags, solution, and previous updates.
 
 4. **Collect update**:
    - **Note**: ask the user "What's the new finding, correction, or follow-up?" (free text, required)

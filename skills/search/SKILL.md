@@ -1,6 +1,6 @@
 ---
 name: search
-description: Search the FragCap network for capsules matching a query. Shows ranked results from the registry, then fetches full details on demand.
+description: Search the FragCap network for capsules matching a query. Shows ranked results from the registry, then fetches full details or installs as a local skill on demand.
 argument-hint: <query>
 ---
 
@@ -35,9 +35,15 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
    ```
    [1] View details  [2] View details  ...  [0] Done
    ```
-   For each selected result, run `fetch-capsule.mjs <gist-id>` and present the full capsule: problem, attempts, pitfalls, solution, snippet.
+   For each selected result, run `fetch-capsule.mjs <gist-id>` and present the full capsule content (problem, attempts, pitfalls, solution, snippet). The response also includes `raw_skill` — the full SKILL.md content.
 
-5. **Apply** — if a capsule is relevant, suggest how it might apply to the user's current work.
+5. **Install option** — after viewing details, offer:
+   ```
+   [1] Install as local skill  [2] Back to results
+   ```
+   If the user picks install, run `install-capsule.mjs <gist-id>`. This writes the SKILL.md to `.claude/skills/` in the current project, making it automatically available in future sessions.
+
+6. **Apply** — if a capsule is relevant, suggest how it might apply to the user's current work.
 
 ## Error Handling
 

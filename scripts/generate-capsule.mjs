@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Usage: echo '<json>' | node generate-capsule.mjs
 // Accepts capsule JSON on stdin (preferred) or as argv[2] for backwards compatibility
+// Outputs a SKILL.md file (structured capsule as a Claude-loadable skill)
 import { CAPSULES_DIR, DATA_DIR, output } from './lib/config.mjs';
 import { randomUUID } from 'crypto';
-import { writeFile, mkdir, readFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
 // Prefer stdin to avoid shell quoting issues with special characters
@@ -27,17 +28,91 @@ try {
   const slug = rawTag + '-' + now.slice(0, 7).replace('-', '');
   const id = `${slug}-${randomUUID().slice(0, 8)}`;
 
-  const capsule = {
-    schema_version: 1, id,
-    tags: input.tags || [], problem: input.problem || '',
-    attempts: input.attempts || [], pitfalls: input.pitfalls || [],
-    solution: input.solution || null, snippet: input.snippet || null,
-    status: input.status || 'resolved',
-    created_at: now, updated_at: now,
-    visibility: 'anonymous', author: 'gh:anonymous-pending', updates: []
-  };
+  const tags = input.tags || [];
+  const problem = input.problem || '';
+  const attempts = input.attempts || [];
+  const pitfalls = input.pitfalls || [];
+  const solution = input.solution || null;
+  const snippet = input.snippet || null;
+  const status = input.status || 'resolved';
 
-  await writeFile(join(CAPSULES_DIR, `${id}.json`), JSON.stringify(capsule, null, 2));
+  // Build SKILL.md content
+  const lines = [];
+
+  // Frontmatter
+  lines.push('---');
+  lines.push(`id: ${id}`);
+  lines.push(`description: "${problem.replace(/"/g, '\\"').slice(0, 200)}"`);
+  lines.push(`tags: [${tags.map(t => `"${t}"`).join(', ')}]`);
+  lines.push(`status: ${status}`);
+  lines.push(`visibility: anonymous`);
+  lines.push(`author: "gh:anonymous-pending"`);
+  lines.push(`created_at: ${now}`);
+  lines.push(`updated_at: ${now}`);
+  lines.push('---');
+  lines.push('');
+
+  // Title
+  const title = tags[0]
+    ? tags[0].split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : 'Exploration Capsule';
+  lines.push(`# ${title}`);
+  lines.push('');
+
+  // When to activate
+  lines.push('## When to Activate');
+  lines.push('');
+  lines.push(`Use this capsule when encountering: ${problem.slice(0, 120)}`);
+  lines.push('');
+
+  // Problem
+  lines.push('## Problem');
+  lines.push('');
+  lines.push(problem);
+  lines.push('');
+
+  // What was tried (attempts)
+  if (attempts.length > 0) {
+    lines.push('## What Does NOT Work');
+    lines.push('');
+    for (const a of attempts) {
+      const tried = typeof a === 'string' ? a : a.tried || '';
+      const outcome = typeof a === 'string' ? '' : a.outcome || '';
+      lines.push(`- **${tried}**${outcome ? ` — ${outcome}` : ''}`);
+    }
+    lines.push('');
+  }
+
+  // Pitfalls
+  if (pitfalls.length > 0) {
+    lines.push('## Pitfalls');
+    lines.push('');
+    for (const p of pitfalls) {
+      lines.push(`- ${p}`);
+    }
+    lines.push('');
+  }
+
+  // Solution / Fix
+  if (solution) {
+    lines.push('## Fix');
+    lines.push('');
+    lines.push(solution);
+    lines.push('');
+  }
+
+  // Code snippet
+  if (snippet) {
+    lines.push('## Snippet');
+    lines.push('');
+    lines.push('```');
+    lines.push(snippet);
+    lines.push('```');
+    lines.push('');
+  }
+
+  const content = lines.join('\n');
+  await writeFile(join(CAPSULES_DIR, `${id}.md`), content);
   await writeFile(join(DATA_DIR, 'pending_review_flag'), String(Date.now()));
   output({ success: true, id });
 } catch (e) { output({ error: e.message }); process.exit(1); }
