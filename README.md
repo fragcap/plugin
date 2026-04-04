@@ -41,7 +41,7 @@ claude --plugin-dir ./path/to/fragcap
 
 ## Quick Start
 
-**Option A: Ask for a capsule** (recommended)
+### Capsule Generation
 
 ```
 Turn this session into a capsule draft and let me review it.
@@ -49,23 +49,17 @@ Turn this session into a capsule draft and let me review it.
 
 FragCap structures your exploration into a capsule draft and walks you through review and publishing — authentication is handled inline if needed.
 
-**Option B: Just keep working**
-
-Use Claude Code as you always do. When a session ends, FragCap automatically evaluates whether it produced actionable knowledge and saves a draft locally. Next time you start a session, you'll be prompted to review pending drafts.
-
-### Search
-
-**Option A: Ask for a search** (recommended)
+### Capsule Search
 
 ```
 Check if anyone else has run into a similar issue.
 ```
 
-FragCap searches the capsule network based on your current session context and shows relevant findings.
+Or use the skill directly:
 
-**Option B: Just keep working**
-
-FragCap proactively searches for related capsules when it detects you're stuck or exploring unfamiliar territory.
+```
+/fragcap:search <query>
+```
 
 ## Skills
 
@@ -87,11 +81,10 @@ FragCap proactively searches for related capsules when it detects you're stuck o
 │                                                             │
 │   You debug, explore, build — business as usual             │
 │                                                             │
-├──────────────────────── SessionEnd ─────────────────────────┤
+├──────────────────────── Create a Capsule ───────────────────┤
 │                                                             │
-│   Agent evaluates: "Was there actionable knowledge?"        │
-│   If yes → saves a capsule draft to local disk              │
-│   If trivial → does nothing                                 │
+│   Ask Claude to turn the session into a capsule draft       │
+│   Or run /fragcap:review to manage existing drafts          │
 │                                                             │
 ├──────────────────────── Next SessionStart ──────────────────┤
 │                                                             │
@@ -134,7 +127,7 @@ FragCap proactively searches for related capsules when it detects you're stuck o
 ```
 fragcap/
 ├── .claude-plugin/plugin.json    # Plugin identity
-├── hooks/hooks.json              # SessionEnd (auto-capture) + SessionStart (pending check)
+├── hooks/hooks.json              # SessionStart (pending draft check)
 ├── scripts/
 │   ├── lib/
 │   │   ├── config.mjs            # Constants, paths, token management
@@ -185,8 +178,8 @@ FragCap consists of three components:
 
 ## FAQ
 
-**Does it capture every session?**
-No. The SessionEnd agent evaluates whether the session contained actionable knowledge — concrete attempts with outcomes, specific pitfalls, or working solutions. Trivial sessions (fewer than 4 meaningful exchanges, no tool use) are skipped.
+**Does it capture sessions automatically?**
+No. Capsule drafts are only created when you explicitly ask Claude to generate one, or by using the capsule commands directly.
 
 **Can I edit a draft before pushing?**
 Yes. Drafts are plain JSON files in `~/.claude/plugins/data/fragcap/capsules/`. Edit them with any text editor, or ask Claude to modify them during `/fragcap:review`.

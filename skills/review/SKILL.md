@@ -5,7 +5,7 @@ description: Review pending capsule drafts one-by-one — scan for PII, then pus
 
 # Review Capsule Drafts
 
-Guide the user through reviewing locally saved capsule drafts. Drafts are auto-generated at the end of each session.
+Guide the user through reviewing locally saved capsule drafts.
 
 ## Script Convention
 
@@ -24,7 +24,7 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
 1. **Auth gate** — run `auth-status.mjs`. Not authenticated → tell user to run `/fragcap:auth` and stop.
 
 2. **List drafts** — run `list-drafts.mjs`.
-   - Empty: "No pending drafts. Drafts are auto-generated when you finish a session that produces actionable findings." Stop.
+   - Empty: "No pending drafts." Stop.
    - Has drafts: show a numbered summary with ID, problem, tags, status, attempt/pitfall/solution counts.
 
 3. **Review each draft** — process one at a time:

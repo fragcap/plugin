@@ -29,7 +29,7 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
      ```
      [1] <problem summary>  [2] <problem summary>  ...
      ```
-   - If no drafts exist: "No local drafts to push. Drafts are auto-generated after sessions."
+   - If no drafts exist: "No local drafts to push. Ask Claude to generate a capsule draft first."
 
 3. **PII preview** — run `preview-pii.mjs <draft-id>`.
    - Show findings with risk levels and suggested replacements.

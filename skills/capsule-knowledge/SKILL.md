@@ -1,40 +1,29 @@
 ---
 name: capsule-knowledge
-description: Proactive guidance for when and how to suggest FragCap capsule commands. Loaded automatically during exploration and debugging sessions.
+description: Proactive guidance for when and how to suggest FragCap capsule commands. Loaded automatically during FragCap plugin sessions.
 ---
 
 # FragCap Capsule Knowledge
 
-The FragCap plugin is available in this session. Use this knowledge to proactively help the user leverage it.
+The FragCap plugin is available in this session.
 
-## When to Suggest `/fragcap:review`
+## When to Proactively Search Capsules
 
-- A SessionStart message mentions pending capsule drafts
-- The user just finished solving a non-trivial problem in the previous session
-- The user asks "what did I explore recently" or similar
+**Trigger a `/fragcap:search` when the user's message implies they want to know about others' experiences.** This includes (but is not limited to):
 
-Suggestion phrasing: "You have pending capsule drafts from previous sessions. Run `/fragcap:review` to review and share them."
+- "has anyone else encountered this"
+- "has anyone had the same experience"
+- "how did others solve this"
+- "anyone with a similar experience"
+- "am I the only one hitting this"
+- "has anyone hit this pitfall before"
+- Any phrasing — in any language — that asks whether **other people** have faced, solved, or documented a similar problem
 
-## When to Suggest `/fragcap:search`
+When triggered, extract the core technical problem from the conversation context and use it as the search query for `/fragcap:search`. Present the results naturally — e.g., "I found some capsules from other developers who hit similar issues."
 
-When you notice any of these signals:
-- The user starts debugging a problem that others might have encountered
-- The user says "has anyone solved this", "is there a known workaround", or similar
-- You recognize a pattern matching common library/framework pitfalls
-- The user is stuck on an integration or compatibility issue
+## When to Suggest Creating a Capsule
 
-**Do NOT suggest immediately.** Instead, run a silent background search first:
-
-1. Extract 2–4 keywords from the problem (tech terms, error names, library names)
-2. Run: `FRAGCAP_DATA="${CLAUDE_PLUGIN_DATA}" node "${CLAUDE_PLUGIN_ROOT}/scripts/search.mjs" <keywords>`
-3. Check the result:
-   - If `results` is empty or `total_found` is 0 → **say nothing**, continue helping normally
-   - If results exist → surface them proactively:
-
-Suggestion phrasing (only when results exist):
-"Found some relevant capsules from the FragCap network that might help:"
-Then show the top 1–3 results: problem summary, status, and tags.
-Do not ask the user if they want to search — just show what was found.
+After the user resolves a non-trivial problem, you may **suggest** (not auto-create) drafting a capsule if the solution meets the quality criteria below. Never push without the user's explicit approval.
 
 ## **⚠️ Language Requirement: All capsules MUST be written in English — including problem, solution, pitfalls, attempts, tags, and update notes. Even if the user's conversation is in another language, always generate and push capsule content in English.**
 
@@ -55,7 +44,9 @@ Do not ask the user if they want to search — just show what was found.
 
 ## Changing Capsule Visibility (Public ↔ Secret)
 
-GitHub Gists cannot toggle visibility after creation. To change a capsule from public to secret (or vice versa):
+**`/fragcap:update` does NOT support changing the visibility field.** It can only append notes and change status (open/resolved/abandoned). Visibility is a GitHub Gist property that cannot be toggled after creation.
+
+To change a capsule from public to secret (or vice versa):
 
 1. Note the capsule ID: `/fragcap:list` to find it
 2. Read/remember the capsule content (it will be shown during deletion)
