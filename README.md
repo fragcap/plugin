@@ -41,26 +41,17 @@ claude --plugin-dir ./path/to/fragcap
 
 ## Quick Start
 
-**1. Authenticate**
+**Option A: Ask for a capsule** (recommended)
 
 ```
-/fragcap:auth
+Turn this session into a capsule draft and let me review it.
 ```
 
-Opens a browser-based GitHub Device Flow. FragCap only requests Gist read/write permission — no repo access. Your token is stored locally and never sent to any third-party server.
+FragCap structures your exploration into a capsule draft and walks you through review and publishing — authentication is handled inline if needed.
 
-**2. Work normally**
+**Option B: Just keep working**
 
-Just use Claude Code as you always do. When your session ends, FragCap automatically evaluates whether it produced actionable knowledge and saves a draft locally.
-
-**3. Review next time**
-
-Next session, you'll see:
-```
-You have 2 pending capsule draft(s). Run /fragcap:review to review them.
-```
-
-Review each draft — push it (anonymously or with your GitHub name), skip it, or delete it.
+Use Claude Code as you always do. When a session ends, FragCap automatically evaluates whether it produced actionable knowledge and saves a draft locally. Next time you start a session, you'll be prompted to review pending drafts.
 
 **4. Search**
 
