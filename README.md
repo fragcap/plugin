@@ -53,12 +53,19 @@ FragCap structures your exploration into a capsule draft and walks you through r
 
 Use Claude Code as you always do. When a session ends, FragCap automatically evaluates whether it produced actionable knowledge and saves a draft locally. Next time you start a session, you'll be prompted to review pending drafts.
 
-**4. Search**
+### Search
 
-Hit a wall? Search what others have learned:
+**Option A: Ask for a search** (recommended)
+
 ```
-/fragcap:search pgbouncer connection pool timeout
+Check if anyone else has run into a similar issue.
 ```
+
+FragCap searches the capsule network based on your current session context and shows relevant findings.
+
+**Option B: Just keep working**
+
+FragCap proactively searches for related capsules when it detects you're stuck or exploring unfamiliar territory.
 
 ## Skills
 
