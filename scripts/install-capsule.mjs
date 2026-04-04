@@ -29,7 +29,25 @@ try {
 
   const outPath = join(skillsDir, `${safeName}.md`);
   const exists = await access(outPath).then(() => true, () => false);
-  await writeFile(outPath, file.content);
+
+  // Inject name field into frontmatter so the skill has a unique, readable name
+  const skillName = safeName;
+  let content = file.content;
+  if (content.startsWith('---')) {
+    const endIdx = content.indexOf('---', 3);
+    if (endIdx !== -1) {
+      const frontmatter = content.slice(0, endIdx);
+      const body = content.slice(endIdx);
+      // Replace existing name or insert after opening ---
+      if (/^name:/m.test(frontmatter)) {
+        content = frontmatter.replace(/^name:.*$/m, `name: ${skillName}`) + body;
+      } else {
+        content = '---\n' + `name: ${skillName}\n` + frontmatter.slice(4) + body;
+      }
+    }
+  }
+
+  await writeFile(outPath, content);
 
   output({
     success: true,
