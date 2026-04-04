@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 // Usage: node install-capsule.mjs <gist-id> [target-dir]
 // Fetches a capsule SKILL.md from a Gist and installs it to .claude/skills/
-import { AUTH_PATH, readJSON, output } from './lib/config.mjs';
+import { AUTH_PATH, readJSON, output, parseFrontmatter } from './lib/config.mjs';
 import { getGist } from './lib/github.mjs';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { parseFrontmatter } from './lib/config.mjs';
 
 const [,, gistId, targetDir] = process.argv;
 if (!gistId) { output({ error: 'Usage: install-capsule.mjs <gist-id> [target-dir]' }); process.exit(1); }

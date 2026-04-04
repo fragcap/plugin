@@ -39,11 +39,14 @@ try {
   // Build SKILL.md content
   const lines = [];
 
+  // YAML double-quoted string escaper
+  const yamlEscape = (s) => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\t/g, '\\t');
+
   // Frontmatter
   lines.push('---');
   lines.push(`id: ${id}`);
-  lines.push(`description: "${problem.replace(/"/g, '\\"').slice(0, 200)}"`);
-  lines.push(`tags: [${tags.map(t => `"${t}"`).join(', ')}]`);
+  lines.push(`description: "${yamlEscape(problem.slice(0, 200))}"`);
+  lines.push(`tags: [${tags.map(t => `"${yamlEscape(t)}"`).join(', ')}]`);
   lines.push(`status: ${status}`);
   lines.push(`visibility: anonymous`);
   lines.push(`author: "gh:anonymous-pending"`);

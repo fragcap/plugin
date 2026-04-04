@@ -68,13 +68,6 @@ export function stripPIIText(text, ghUsername) {
   return str;
 }
 
-/** Strip PII from a JSON object (legacy support). */
-export function stripPII(obj, ghUsername) {
-  let str = JSON.stringify(obj);
-  str = stripPIIText(str, ghUsername);
-  return JSON.parse(str);
-}
-
 /**
  * Apply visibility to a SKILL.md content string.
  * Returns the modified markdown string with updated frontmatter.
@@ -95,19 +88,6 @@ export function applyVisibilityMd(content, visibility, username, capsuleId) {
   }
 
   return result;
-}
-
-/** Legacy JSON visibility (kept for backwards compat). */
-export function applyVisibility(capsule, visibility, username) {
-  const c = structuredClone(capsule);
-  if (visibility === 'anonymous') {
-    c.visibility = 'anonymous';
-    c.author = `gh:anonymous-${anonHash(username, capsule.id)}`;
-    return stripPII(c, username);
-  }
-  c.visibility = 'attributed';
-  c.author = `gh:${username}`;
-  return c;
 }
 
 export function detectPII(text) {

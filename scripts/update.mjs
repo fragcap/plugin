@@ -27,8 +27,9 @@ try {
 
   // Append update section at the end
   const date = new Date().toISOString().slice(0, 10);
-  const updateBlock = `\n## Update (${date})\n\n${note}\n`;
-  content += updateBlock;
+  const updateBlock = `## Update (${date})\n\n${note}\n`;
+  // Ensure content ends with exactly one blank line before the new section
+  content = content.replace(/\n*$/, '\n\n') + updateBlock;
 
   const res = await updateGist(token, gistId, content);
   if (res.status >= 400) { output({ error: `GitHub API error: ${res.data.message || res.status}` }); process.exit(1); }
