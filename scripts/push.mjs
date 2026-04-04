@@ -6,9 +6,11 @@ import { applyVisibilityMd } from './lib/pii.mjs';
 import { join } from 'path';
 import { readFile, unlink } from 'fs/promises';
 
+const VALID_SCOPES = new Set(['public', 'secret', 'private']);
 const [,, id, visibility = 'anonymous', gistScope = 'public'] = process.argv;
 if (!id) { output({ error: 'Usage: push.mjs <capsule-id> [anonymous|attributed] [public|secret]' }); process.exit(1); }
-const isPublic = gistScope !== 'secret' && gistScope !== 'private';
+if (!VALID_SCOPES.has(gistScope)) { output({ error: `Invalid scope "${gistScope}" — must be public or secret.` }); process.exit(1); }
+const isPublic = gistScope === 'public';
 
 try {
   const token = await ensureValidToken();

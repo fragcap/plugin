@@ -229,6 +229,15 @@ export async function proxyFetch(url, opts = {}, _redirectCount = 0) {
       if (!location) throw new Error('Redirect without Location header');
 
       const nextUrl = new URL(location, url).href;
+
+      // Block cross-origin redirects to prevent credential leakage
+      const origOrigin = new URL(url).origin;
+      const nextOrigin = new URL(nextUrl).origin;
+      if (nextOrigin !== origOrigin) {
+        res.resume();
+        throw new Error(`Blocked cross-origin redirect from ${origOrigin} to ${nextOrigin}`);
+      }
+
       // 301/302 convert to GET; 307/308 preserve method
       const nextOpts =
         res.statusCode <= 302
