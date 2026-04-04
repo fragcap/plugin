@@ -36,6 +36,8 @@ Suggestion phrasing (only when results exist):
 Then show the top 1–3 results: problem summary, status, and tags.
 Do not ask the user if they want to search — just show what was found.
 
+## **⚠️ Language Requirement: All capsules MUST be written in English — including problem, solution, pitfalls, attempts, tags, and update notes. Even if the user's conversation is in another language, always generate and push capsule content in English.**
+
 ## What Makes a Good Capsule
 
 - A specific, non-obvious problem with a clear resolution path
