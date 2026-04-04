@@ -1,6 +1,6 @@
 // FragCap configuration — zero external dependencies (improved)
 import { readFile, writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { join, dirname, basename, resolve } from 'path';
 import { execSync } from 'child_process';
 import http from 'http';
@@ -263,26 +263,46 @@ if (!rawDataDir) {
 }
 
 /**
- * Claude Code may resolve CLAUDE_PLUGIN_DATA as either "fragcap" (plugin name)
- * or "fragcap-marketplace-fragcap" (marketplace-plugin). Detect both and converge.
+ * Claude Code sets CLAUDE_PLUGIN_DATA to different directory names depending
+ * on install context (e.g. "fragcap", "fragcap-fragcap-marketplace", etc.).
+ * Instead of guessing names, scan sibling dirs for auth.json marker.
  */
 function resolveDataDir(raw) {
   const resolved = resolve(raw);
-  const parent   = dirname(resolved);
-  const base     = basename(resolved);
 
-  const candidates = base === 'fragcap'
-    ? [resolved, join(parent, 'fragcap-marketplace-fragcap')]
-    : base === 'fragcap-marketplace-fragcap'
-      ? [resolved, join(parent, 'fragcap')]
-      : [resolved];
+  // 1. If the given path itself has auth.json, use it directly
+  if (existsSync(join(resolved, 'auth.json'))) return resolved;
 
-  for (const dir of candidates) {
-    if (existsSync(join(dir, 'auth.json'))) return dir;
+  // 2. Scan sibling directories for any fragcap-related data dir
+  const parent = dirname(resolved);
+  if (existsSync(parent)) {
+    try {
+      const siblings = readdirSync(parent);
+      for (const name of siblings) {
+        // Only consider dirs whose name contains "fragcap"
+        if (!name.includes('fragcap')) continue;
+        const candidate = join(parent, name);
+        if (existsSync(join(candidate, 'auth.json'))) return candidate;
+      }
+    } catch { /* permission error, etc. */ }
   }
-  for (const dir of candidates) {
-    if (existsSync(dir)) return dir;
+
+  // 3. If nothing found with auth.json, check if given path at least exists
+  if (existsSync(resolved)) return resolved;
+
+  // 4. Check siblings that exist (for first-run before auth)
+  if (existsSync(parent)) {
+    try {
+      const siblings = readdirSync(parent);
+      for (const name of siblings) {
+        if (!name.includes('fragcap')) continue;
+        const candidate = join(parent, name);
+        if (existsSync(join(candidate, 'capsules'))) return candidate;
+      }
+    } catch { /* */ }
   }
+
+  // 5. Nothing found — use the original path (will be created on first write)
   return resolved;
 }
 
