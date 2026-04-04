@@ -17,8 +17,7 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
 ## When to Activate
 
 - User runs `/fragcap:install <gist-id>`
-- User asks to install or save a capsule locally
-- After viewing search results, user wants to keep a capsule
+- User explicitly asks to install a capsule (e.g., "install this", "save this to my project")
 
 ## Flow
 
