@@ -39,7 +39,12 @@ If a script exits with a non-zero code or returns `{ error: "..." }`, **stop imm
      ```
      [1] anonymous (default)  [2] attributed
      ```
-     Then run `push.mjs <draft-id> <visibility>`
+     Then present gist scope options:
+     ```
+     [1] public (default) — searchable by others, registered in central index
+     [2] secret — unlisted, not registered in index
+     ```
+     Then run `push.mjs <draft-id> <visibility> <scope>` where scope is `public` or `secret`.
    - **2 Skip** — keep the draft for later, move to next
    - **3 Delete** — run `delete-draft.mjs <draft-id>` to permanently remove
 

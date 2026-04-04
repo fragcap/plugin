@@ -51,6 +51,17 @@ Do not ask the user if they want to search — just show what was found.
 - One-line configuration changes
 - Problems caused by stale dependencies (just update them)
 
+## Changing Capsule Visibility (Public ↔ Secret)
+
+GitHub Gists cannot toggle visibility after creation. To change a capsule from public to secret (or vice versa):
+
+1. Note the capsule ID: `/fragcap:list` to find it
+2. Read/remember the capsule content (it will be shown during deletion)
+3. Delete the original: `/fragcap:delete <id>`
+4. Re-create with the desired visibility: draft a new capsule with the same content, then `/fragcap:push` — during push you will be asked to choose public or secret scope
+
+Suggestion phrasing: "Gist visibility can't be changed after creation. I can delete the current capsule and re-push it as [public/secret] — the content will be preserved."
+
 ## Available Commands
 
 | Command | Purpose |
@@ -61,3 +72,4 @@ Do not ask the user if they want to search — just show what was found.
 | `/fragcap:search` | Search capsules from all users |
 | `/fragcap:list` | List user's published capsules |
 | `/fragcap:update` | Append update to a published capsule |
+| `/fragcap:delete` | Delete a published capsule |
